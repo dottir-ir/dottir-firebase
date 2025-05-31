@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isVerifiedDoctor() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isVerified == true &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor';
+    }
+    
+    function isAuthor(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAdmin() || isAuthor(userId);
+      allow delete: if isAdmin();
+    }
+
+    // Cases collection
+    match /cases/{caseId} {
+      allow read: if isAuthenticated();
+      allow create: if isVerifiedDoctor();
+      allow update: if isAdmin() || (isVerifiedDoctor() && isAuthor(resource.data.authorId));
+      allow delete: if isAdmin() || (isVerifiedDoctor() && isAuthor(resource.data.authorId));
+    }
+
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isAuthor(resource.data.authorId);
+      allow delete: if isAdmin() || isAuthor(resource.data.authorId);
+    }
+
+    // Likes collection
+    match /likes/{likeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin() || isAuthor(resource.data.userId);
+    }
+
+    // Saves collection
+    match /saves/{saveId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin() || isAuthor(resource.data.userId);
+    }
+  }
+} 
