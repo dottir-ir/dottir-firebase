@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -22,6 +23,22 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
+import { CaseService } from '@/services/CaseService';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
+
+interface CaseMetadata {
+  id: string;
+  title: string;
+  description: string;
+  status: 'draft' | 'published' | 'archived';
+  difficulty: string;
+  category?: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  createdAt: Date;
+}
 
 const caseService = new CaseService();
 

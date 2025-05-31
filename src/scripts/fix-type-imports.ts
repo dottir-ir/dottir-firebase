@@ -1,4 +1,5 @@
 import * as glob from 'glob';
+import * as fs from 'fs';
 
 // Common type names that should be imported with 'type'
 const TYPE_NAMES = new Set([

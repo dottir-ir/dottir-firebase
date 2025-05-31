@@ -1,4 +1,6 @@
+import { Container, Box, Typography, Alert } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import CaseUploadForm from '../components/case-upload/CaseUploadForm';
 
 export default function CaseUploadPage() {
   const { currentUser } = useAuth();

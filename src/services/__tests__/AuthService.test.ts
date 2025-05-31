@@ -14,11 +14,13 @@ import { MockAuthProvider } from '@/test/mocks/AuthProvider';
 import { mockUser, mockCase, mockComment } from '@/test/mocks/data';
 
 // Mock Firebase
-jest.mock('firebase/auth');
-jest.mock('firebase/firestore');
-jest.mock('../../config/firebase');
+vi.mock('firebase/auth');
+vi.mock('firebase/firestore');
+vi.mock('../../config/firebase');
 
 describe('AuthService', () => {
+  const authService = new AuthService();
+  
   const mockUser = {
     uid: 'user1',
     email: 'test@example.com',
@@ -37,7 +39,7 @@ describe('AuthService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('register', () => {

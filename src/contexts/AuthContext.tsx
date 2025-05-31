@@ -1,21 +1,26 @@
-import type { UserRole } from '../services/AuthService';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { User } from '../types/user';
+import { UserService } from '../firebase/services/UserService';
 
 interface AuthContextType {
-  currentUser: AppUser | null;
+  currentUser: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<UserCredential>;
-  signOut: () => Promise<void>;
-  register: (email: string, password: string, role: UserRole, userData: Partial<AppUser>) => Promise<UserCredential>;
-  resetPassword: (email: string) => Promise<void>;
-  error: string | null;
-  clearError: () => void;
-  updateProfile: (data: Partial<AppUser>) => Promise<void>;
-  // Add any other methods referenced in your components
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, userData: Partial<User>) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -23,128 +28,85 @@ export function useAuth(): AuthContextType {
   return context;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const getErrorMessage = (err: any) => err?.message || 'An error occurred';
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      setError(null);
-      return await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setError(null);
-      await firebaseSignOut(auth);
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    }
-  };
-
-  const register = async (
-    email: string,
-    password: string,
-    role: UserRole,
-    userData: Partial<AppUser>
-  ): Promise<UserCredential> => {
-    try {
-      setError(null);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        email,
-        role,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        ...userData
-      });
-      return userCredential;
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      setError(null);
-      await sendPasswordResetEmail(auth, email);
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    }
-  };
-
-  const updateProfile = async (data: Partial<AppUser>) => {
-    if (!currentUser) return;
-    try {
-      setError(null);
-      await updateDoc(doc(db, 'users', currentUser.id), {
-        ...data,
-        updatedAt: new Date(),
-      });
-      setCurrentUser({ ...currentUser, ...data, updatedAt: new Date() });
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    }
-  };
-
-  const clearError = () => {
-    setError(null);
-  };
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const userService = useMemo(() => new UserService(), []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setCurrentUser({
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              ...userDoc.data() as Omit<AppUser, 'id' | 'email'>,
-            });
+        userService.getUserById(firebaseUser.uid).then(user => {
+          if (user) {
+            setCurrentUser(user);
           } else {
-            setCurrentUser(null);
-            setError('User profile not found');
+            // Create a new user profile if it doesn't exist
+            const newUser: Partial<User> = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || '',
+              photoURL: firebaseUser.photoURL || undefined,
+              role: 'patient', // Default role
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              lastLoginAt: new Date()
+            };
+            userService.createUser(firebaseUser.uid, newUser).then(() => {
+              setCurrentUser(newUser as User);
+            });
           }
-        } catch (err) {
-          setError(getErrorMessage(err));
-          setCurrentUser(null);
-        }
+        });
       } else {
         setCurrentUser(null);
       }
       setLoading(false);
     });
-    return unsubscribe;
-  }, []);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [userService]);
+
+  const login = async (email: string, password: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = await userService.getUserById(userCredential.user.uid);
+    if (user) {
+      setCurrentUser(user);
+    }
+  };
+
+  const register = async (email: string, password: string, userData: Partial<User>) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const newUser: Partial<User> = {
+      ...userData,
+      uid: userCredential.user.uid,
+      email: userCredential.user.email || '',
+      displayName: userCredential.user.displayName || '',
+      photoURL: userCredential.user.photoURL || undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: new Date()
+    };
+    await userService.createUser(userCredential.user.uid, newUser);
+    setCurrentUser(newUser as User);
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+    setCurrentUser(null);
+  };
 
   const value = {
     currentUser,
     loading,
-    signIn,
-    signOut,
+    login,
     register,
-    resetPassword,
-    error,
-    clearError,
-    updateProfile,
-    // Add any other methods referenced in your components
+    logout
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 } 

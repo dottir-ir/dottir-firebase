@@ -1,31 +1,35 @@
-import type { Notification } from '../../services/NotificationService';
+import React from 'react';
+import { Stack, Alert, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { Notification } from '../../types/notification';
 
 interface NotificationBannerProps {
   notifications: Notification[];
   onClose: (id: string) => void;
 }
 
-export const NotificationBanner: React.FC<NotificationBannerProps> = ({ notifications, onClose }) => {
-  if (!notifications.length) return null;
+export const NotificationBanner: React.FC<NotificationBannerProps> = ({
+  notifications,
+  onClose,
+}) => {
   return (
     <Stack spacing={2} sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1400 }}>
-      {notifications.map((notif) => (
+      {notifications.map((notification) => (
         <Alert
-          key={notif.id}
-          severity={notif.type}
+          key={notification.id}
+          severity="info"
           action={
             <IconButton
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={() => onClose(notif.id)}
+              onClick={() => onClose(notification.id)}
             >
               <CloseIcon fontSize="inherit" />
             </IconButton>
           }
-          sx={{ minWidth: 300 }}
         >
-          {notif.message}
+          {notification.message}
         </Alert>
       ))}
     </Stack>

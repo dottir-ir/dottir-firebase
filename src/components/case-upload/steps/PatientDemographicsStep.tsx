@@ -1,4 +1,6 @@
+import React from 'react';
 import type { CaseFormData } from '../../../types/case';
+import type { StepProps, FormError } from '../../../types/form';
 
 export const PatientDemographicsStep: React.FC<StepProps> = ({
   formData,
@@ -29,6 +31,18 @@ export const PatientDemographicsStep: React.FC<StepProps> = ({
     nextStep();
   };
 
+  const getErrorMessage = (field: string): string | undefined => {
+    const [section, name] = field.split('.');
+    const sectionErrors = errors?.[section];
+    if (!sectionErrors || !('message' in sectionErrors)) {
+      const fieldError = sectionErrors?.[name];
+      if (fieldError && 'message' in fieldError) {
+        return fieldError.message;
+      }
+    }
+    return undefined;
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <h2>Patient Demographics</h2>
@@ -42,8 +56,8 @@ export const PatientDemographicsStep: React.FC<StepProps> = ({
           onChange={handleChange}
           required
         />
-        {errors?.patientDemographics?.age && (
-          <span className="error">{errors.patientDemographics.age.message}</span>
+        {getErrorMessage('patientDemographics.age') && (
+          <span className="error">{getErrorMessage('patientDemographics.age')}</span>
         )}
       </div>
       <div className="form-group">
@@ -60,8 +74,8 @@ export const PatientDemographicsStep: React.FC<StepProps> = ({
           <option value="female">Female</option>
           <option value="other">Other</option>
         </select>
-        {errors?.patientDemographics?.gender && (
-          <span className="error">{errors.patientDemographics.gender.message}</span>
+        {getErrorMessage('patientDemographics.gender') && (
+          <span className="error">{getErrorMessage('patientDemographics.gender')}</span>
         )}
       </div>
       <div className="button-group">

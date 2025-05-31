@@ -1,9 +1,84 @@
 import { Toaster } from 'react-hot-toast';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LoginForm } from './components/auth/LoginForm';
+import { RegisterForm } from './components/auth/RegisterForm';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { NewsfeedPage } from './pages/Newsfeed';
+import CaseUploadPage from './pages/CaseUploadPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ContentModeration from './pages/admin/ContentModeration';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
+import VerificationRequests from './pages/admin/VerificationRequests';
+import { ProfilePage } from './pages/ProfilePage';
+import { Dashboard } from './components/Dashboard';
+import { Unauthorized } from './components/Unauthorized';
+import { VerificationPending } from './components/VerificationPending';
 
-// Placeholder components - you'll need to create these
-const Dashboard = () => <div>Dashboard</div>;
-const Unauthorized = () => <div>Unauthorized Access</div>;
-const VerificationPending = () => <div>Your verification is pending</div>;
+function AppRoutes() {
+  const { currentUser } = useAuth();
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<LoginForm />} />
+      <Route path="/register" element={<RegisterForm />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/verification-pending" element={currentUser ? <VerificationPending user={currentUser} /> : <Navigate to="/login" />} />
+
+      {/* Protected routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <NewsfeedPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile/:userId"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Doctor-only routes */}
+      <Route
+        path="/doctor/*"
+        element={
+          <ProtectedRoute requiredRole="doctor">
+            <Routes>
+              <Route path="upload-case" element={<CaseUploadPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin-only routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <Routes>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="verification-requests/*" element={<VerificationRequests />} />
+              <Route path="content-moderation" element={<ContentModeration />} />
+              <Route path="analytics" element={<AnalyticsDashboard />} />
+              <Route path="*" element={<Navigate to="dashboard" replace />} />
+            </Routes>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
@@ -34,76 +109,7 @@ function App() {
       />
       <Router>
         <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/verification-pending" element={<VerificationPending />} />
-
-            {/* Protected routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <NewsfeedPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/profile/:userId"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Doctor-only routes */}
-            <Route
-              path="/doctor/*"
-              element={
-                <ProtectedRoute requiredRole="doctor">
-                  <Routes>
-                    <Route path="upload-case" element={<CaseUploadPage />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Patient-only routes */}
-            {/*
-            <Route
-              path="/patient/*"
-              element={
-                <ProtectedRoute requiredRole="patient">
-                  <div>Patient Dashboard</div>
-                </ProtectedRoute>
-              }
-            />
-            */}
-
-            {/* Admin-only routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <Routes>
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="verification-requests/*" element={<VerificationRequests />} />
-                    <Route path="content-moderation" element={<ContentModeration />} />
-                    <Route path="analytics" element={<AnalyticsDashboard />} />
-                    <Route path="*" element={<Navigate to="dashboard" replace />} />
-                  </Routes>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AppRoutes />
         </AuthProvider>
       </Router>
     </>

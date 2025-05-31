@@ -1,17 +1,15 @@
-import { db, auth, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import {
   collection,
   doc,
   getDoc,
   getDocs,
-  addDoc,
   updateDoc,
   deleteDoc,
   query,
   where,
   orderBy,
   limit as firestoreLimit,
-  Timestamp,
   startAfter,
   onSnapshot,
   increment,
@@ -20,16 +18,9 @@ import {
   writeBatch,
   Query,
   setDoc,
-  DocumentData
 } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 import type { Case, CaseMetadata, CaseUpload } from '../types/case';
-import {
-  ref, uploadBytes, getDownloadURL, deleteObject
-} from 'firebase/storage';
-import {
-  signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, sendPasswordResetEmail
-} from 'firebase/auth';
 import type { Comment } from '../types/comment';
 import { BaseService } from './BaseService';
 import { ServiceError } from '@/utils/errors';
@@ -46,7 +37,33 @@ export class CaseService extends BaseService {
       if (!caseDoc.exists()) {
         throw new ServiceError('Case not found', 'not-found');
       }
-      return this.convertToCase(caseDoc.data());
+      const data = caseDoc.data();
+      return {
+        id: caseDoc.id,
+        title: data.title,
+        description: data.description,
+        authorId: data.authorId,
+        authorImage: data.authorImage,
+        status: data.status,
+        tags: data.tags,
+        category: data.category,
+        difficulty: data.difficulty,
+        createdAt: data.createdAt.toDate(),
+        updatedAt: data.updatedAt.toDate(),
+        publishedAt: data.publishedAt?.toDate(),
+        viewCount: data.viewCount,
+        likeCount: data.likeCount,
+        commentCount: data.commentCount,
+        saveCount: data.saveCount,
+        clinicalHistory: data.clinicalHistory,
+        clinicalPresentation: data.clinicalPresentation,
+        imagingFindings: data.imagingFindings,
+        differentialDiagnosis: data.differentialDiagnosis,
+        finalDiagnosis: data.finalDiagnosis,
+        patientDemographics: data.patientDemographics,
+        images: data.images,
+        teachingPoints: data.teachingPoints
+      } as Case;
     } catch (error) {
       return this.handleError(error);
     }
@@ -465,20 +482,19 @@ export class CaseService extends BaseService {
       const q = query(
         this.commentsCollection,
         where('caseId', '==', caseId),
-        where('isDeleted', '==', false),
-        orderBy('createdAt', 'asc')
+        orderBy('createdAt', 'desc')
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => ({
         id: doc.id,
+        content: doc.data().text,
+        authorId: doc.data().userId,
         caseId: doc.data().caseId,
-        userId: doc.data().userId,
-        text: doc.data().text,
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
+        createdAt: doc.data().createdAt.toDate(),
+        updatedAt: doc.data().updatedAt.toDate(),
         likeCount: doc.data().likeCount,
-        isEdited: doc.data().isEdited,
-        isDeleted: doc.data().isDeleted,
+        replyCount: doc.data().replyCount || 0,
+        parentId: doc.data().parentId
       }));
     } catch (error) {
       return this.handleError(error);

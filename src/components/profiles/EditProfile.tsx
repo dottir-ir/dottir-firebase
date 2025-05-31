@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +11,8 @@ import {
   Autocomplete,
   Chip,
 } from '@mui/material';
-import { userService } from '../../services/UserService';
+import { UserService } from '@/services/UserService';
+import type { User } from '@/types/user';
 
 interface EditProfileProps {
   user: User;
@@ -31,7 +33,8 @@ const commonAreasOfInterest = [
 ];
 
 export const EditProfile: React.FC<EditProfileProps> = ({ user, onProfileUpdated }) => {
-  const [formData, setFormData] = useState<Partial<UserProfile>>({
+  const userService = new UserService();
+  const [formData, setFormData] = useState<Partial<User>>({
     displayName: user.displayName,
     title: user.title,
     bio: user.bio,
@@ -46,7 +49,7 @@ export const EditProfile: React.FC<EditProfileProps> = ({ user, onProfileUpdated
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: Partial<User>) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,8 +58,9 @@ export const EditProfile: React.FC<EditProfileProps> = ({ user, onProfileUpdated
     setError(null);
 
     try {
-      const updatedUser = await userService.updateUserProfile(user.id, formData);
-      onProfileUpdated(updatedUser);
+      await userService.updateUserProfile(user.id, formData);
+      const updatedUser = await userService.getUserById(user.id);
+      onProfileUpdated(updatedUser as User);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
@@ -169,7 +173,7 @@ export const EditProfile: React.FC<EditProfileProps> = ({ user, onProfileUpdated
                     options={commonAreasOfInterest}
                     value={formData.areasOfInterest || []}
                     onChange={(_, newValue) => {
-                      setFormData(prev => ({ ...prev, areasOfInterest: newValue }));
+                      setFormData((prev: Partial<User>) => ({ ...prev, areasOfInterest: newValue }));
                     }}
                     renderInput={(params) => (
                       <TextField

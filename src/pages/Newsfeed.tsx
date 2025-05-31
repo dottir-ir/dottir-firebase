@@ -1,6 +1,30 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useInView } from 'react-intersection-observer';
+import { Filter, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { CaseService } from '@/services/CaseService';
+import type { CaseMetadata } from '../types/case';
+import type { DocumentData } from 'firebase/firestore';
+import { CasePreview } from '../components/cases/CasePreview';
+import { CasePreviewSkeleton } from '../components/cases/CasePreviewSkeleton';
+import { Loader2 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
+
+type SortOption = 'recent' | 'popular' | 'trending';
+
+interface NewsfeedFilters {
+  category?: string;
+  tags?: string[];
+  sortBy: SortOption;
+}
+
+interface NewsfeedOptions {
+  pageSize: number;
+  lastDoc?: DocumentData;
+  filters: NewsfeedFilters;
+}
 
 export const NewsfeedPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,7 +37,7 @@ export const NewsfeedPage: React.FC = () => {
   const [popularTags, setPopularTags] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'trending'>('recent');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [showFilters, setShowFilters] = useState(false);
   const { currentUser } = useAuth();
 
@@ -27,7 +51,7 @@ export const NewsfeedPage: React.FC = () => {
   useEffect(() => {
     const sort = searchParams.get('sort');
     if (sort && ['recent', 'popular', 'trending'].includes(sort)) {
-      setSortBy(sort as 'recent' | 'popular' | 'trending');
+      setSortBy(sort as SortOption);
     }
   }, [searchParams]);
 
@@ -44,14 +68,16 @@ export const NewsfeedPage: React.FC = () => {
       setCategories(categoriesData);
       setPopularTags(tagsData);
       
-      const { cases: initialCases, lastDoc: newLastDoc } = await caseService.getCasesForNewsfeed({
+      const options: NewsfeedOptions = {
         pageSize: PAGE_SIZE,
         filters: {
           category: selectedCategory || undefined,
           tags: selectedTags.length > 0 ? selectedTags : undefined,
           sortBy
         }
-      });
+      };
+      
+      const { cases: initialCases, lastDoc: newLastDoc } = await caseService.getCasesForNewsfeed(options);
       
       setCases(initialCases);
       setLastDoc(newLastDoc);
@@ -69,7 +95,7 @@ export const NewsfeedPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const { cases: newCases, lastDoc: newLastDoc } = await caseService.getCasesForNewsfeed({
+      const options: NewsfeedOptions = {
         pageSize: PAGE_SIZE,
         lastDoc,
         filters: {
@@ -77,7 +103,9 @@ export const NewsfeedPage: React.FC = () => {
           tags: selectedTags.length > 0 ? selectedTags : undefined,
           sortBy
         }
-      });
+      };
+
+      const { cases: newCases, lastDoc: newLastDoc } = await caseService.getCasesForNewsfeed(options);
 
       setCases(prev => [...prev, ...newCases]);
       setLastDoc(newLastDoc);
@@ -118,7 +146,7 @@ export const NewsfeedPage: React.FC = () => {
     setHasMore(true);
   };
 
-  const handleSortChange = (newSort: 'recent' | 'popular' | 'trending') => {
+  const handleSortChange = (newSort: SortOption) => {
     setSortBy(newSort);
     setCases([]);
     setLastDoc(null);
@@ -226,23 +254,15 @@ export const NewsfeedPage: React.FC = () => {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
-          <button
-            onClick={loadInitialData}
-            className="ml-4 text-red-700 underline"
-          >
-            Try Again
-          </button>
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading && cases.length === 0 ? (
-          // Show skeleton loaders when initially loading
-          Array.from({ length: 3 }).map((_, index) => (
+          Array.from({ length: 6 }).map((_, index) => (
             <CasePreviewSkeleton key={index} />
           ))
         ) : (
-          // Show actual cases
           cases.map((caseData) => (
             <CasePreview
               key={caseData.id}
@@ -254,21 +274,14 @@ export const NewsfeedPage: React.FC = () => {
       </div>
 
       {loading && cases.length > 0 && (
-        <div className="flex justify-center py-8">
+        <div className="flex justify-center mt-8">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
       )}
 
-      {!loading && cases.length === 0 && !error && (
-        <div className="text-center py-12">
-          <h3 className="text-xl font-medium text-gray-900 mb-2">No cases found</h3>
-          <p className="text-gray-600">
-            Try adjusting your filters or check back later for new cases.
-          </p>
-        </div>
+      {!loading && hasMore && (
+        <div ref={ref} className="h-10" />
       )}
-
-      <div ref={ref} className="h-10" />
     </div>
   );
 }; 

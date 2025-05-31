@@ -1,4 +1,4 @@
-import { db, auth, storage } from '../../config/firebase';
+import { db } from '../../config/firebase';
 import {
   collection,
   doc,
@@ -7,28 +7,14 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  startAfter,
-  onSnapshot,
-  serverTimestamp,
 } from 'firebase/firestore';
-import type { Timestamp } from 'firebase/firestore';
-import {
-  ref, uploadBytes, getDownloadURL, deleteObject
-} from 'firebase/storage';
-import {
-  signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, sendPasswordResetEmail
-} from 'firebase/auth';
-import type { Case } from '../../types/case';
+import type { Case, CaseUpload } from '../../types/case';
 import { CaseService } from '../CaseService';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock Firebase
-jest.mock('firebase/firestore');
-jest.mock('../../config/firebase');
+vi.mock('firebase/firestore');
+vi.mock('../../config/firebase');
 
 describe('CaseService', () => {
   let caseService: CaseService;
@@ -36,19 +22,11 @@ describe('CaseService', () => {
     id: 'case1',
     title: 'Test Case',
     description: 'Test Description',
-    content: 'Test Content',
     authorId: 'user1',
-    authorName: 'Test User',
-    authorImage: 'https://example.com/avatar.jpg',
     status: 'published',
     tags: ['cardiology', 'emergency'],
     category: 'Cardiology',
     difficulty: 'intermediate',
-    patientAge: 45,
-    patientGender: 'male',
-    clinicalPresentation: 'Test presentation',
-    imagingFindings: 'Test findings',
-    images: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     publishedAt: new Date(),
@@ -56,23 +34,32 @@ describe('CaseService', () => {
     likeCount: 0,
     commentCount: 0,
     saveCount: 0,
-    likes: [],
-    saves: [],
-    teachingPoints: {
-      keyPoints: ['Test point 1', 'Test point 2'],
-      references: ['Test reference 1'],
-      relatedCases: ['case2']
-    }
+    clinicalHistory: 'Test clinical history',
+    patientDemographics: {
+      age: 45,
+      gender: 'male',
+      presentingComplaint: 'Test complaint'
+    },
+    images: [{
+      url: 'https://example.com/image.jpg',
+      description: 'Test image',
+      order: 1
+    }],
+    teachingPoints: [{
+      title: 'Test point 1',
+      description: 'Test description 1',
+      order: 1
+    }]
   };
 
   beforeEach(() => {
     caseService = new CaseService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getCaseById', () => {
     it('should return case when found', async () => {
-      (getDoc as jest.Mock).mockResolvedValue({
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => true,
         data: () => mockCase,
       });
@@ -83,7 +70,7 @@ describe('CaseService', () => {
     });
 
     it('should throw error when case not found', async () => {
-      (getDoc as jest.Mock).mockResolvedValue({
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => false,
       });
 
@@ -93,31 +80,34 @@ describe('CaseService', () => {
 
   describe('createCase', () => {
     it('should create case successfully', async () => {
-      const newCase = {
+      const newCase: CaseUpload = {
         title: 'New Case',
         description: 'New Description',
-        content: 'New Content',
         authorId: 'user1',
-        authorName: 'Test User',
-        authorImage: 'https://example.com/avatar.jpg',
-        status: 'draft' as const,
+        status: 'draft',
         tags: ['test'],
         category: 'Test',
-        difficulty: 'beginner' as const,
-        patientAge: 30,
-        patientGender: 'female' as const,
-        clinicalPresentation: 'Test presentation',
-        imagingFindings: 'Test findings',
-        images: [],
-        teachingPoints: {
-          keyPoints: ['Test point 1'],
-          references: ['Test reference 1'],
-          relatedCases: []
-        }
+        difficulty: 'beginner',
+        clinicalHistory: 'Test clinical history',
+        patientDemographics: {
+          age: 30,
+          gender: 'female',
+          presentingComplaint: 'Test complaint'
+        },
+        images: [{
+          url: 'https://example.com/image.jpg',
+          description: 'Test image',
+          order: 1
+        }],
+        teachingPoints: [{
+          title: 'Test point 1',
+          description: 'Test description 1',
+          order: 1
+        }]
       };
 
-      (addDoc as jest.Mock).mockResolvedValue({ id: 'newCase1' });
-      (getDoc as jest.Mock).mockResolvedValue({
+      (addDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'newCase1' });
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => true,
         data: () => ({ ...newCase, id: 'newCase1' }),
       });

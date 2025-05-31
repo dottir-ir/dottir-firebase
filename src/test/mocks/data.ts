@@ -1,66 +1,71 @@
-import type { User } from '@/types/user';
-import type { Case } from '@/types/case';
-import type { Comment } from '@/types/comment';
+import { User } from '../../types/user';
+import { Case } from '../../types/case';
+import { Comment } from '../../types/comment';
 
 export const mockUser: User = {
-  id: 'test-user-id',
+  id: 'user1',
+  uid: 'user1',
   email: 'test@example.com',
   displayName: 'Test User',
-  photoURL: 'https://example.com/photo.jpg',
+  role: 'doctor',
+  bio: 'Test bio',
+  specialization: 'General Medicine',
+  experience: '5 years',
+  areasOfInterest: ['Cardiology', 'Neurology'],
+  verificationDocuments: ['doc1.pdf', 'doc2.pdf'],
   createdAt: new Date(),
   updatedAt: new Date(),
-  role: 'doctor',
-  title: 'Dr.',
-  specialization: 'Cardiology',
-  institution: 'Test Hospital',
-  lastLoginAt: new Date(),
-  doctorVerificationStatus: 'verified',
-  isDeleted: false
+  lastLoginAt: new Date()
 };
 
 export const mockCase: Case = {
-  id: 'test-case-id',
-  title: 'Test Case',
-  description: 'This is a test case',
-  content: 'Test content',
-  authorId: mockUser.id,
-  authorName: mockUser.displayName,
-  authorImage: mockUser.photoURL,
+  id: 'case1',
+  title: 'Interesting Case Study',
+  description: 'A detailed case study of a rare condition',
+  authorId: 'user1',
   status: 'published',
-  tags: ['test'],
-  category: 'Cardiology',
-  difficulty: 'intermediate',
-  patientAge: 45,
-  patientGender: 'male',
-  clinicalPresentation: 'Test presentation',
-  imagingFindings: 'Test findings',
-  images: [],
+  tags: ['cardiology', 'radiology'],
+  category: 'cardiology',
+  difficulty: 'beginner',
   createdAt: new Date(),
   updatedAt: new Date(),
-  publishedAt: new Date(),
   viewCount: 0,
   likeCount: 0,
   commentCount: 0,
   saveCount: 0,
-  likes: [],
-  saves: [],
-  teachingPoints: {
-    keyPoints: ['Test point 1'],
-    references: ['Test reference 1'],
-    relatedCases: []
+  clinicalHistory: 'Patient presented with chest pain',
+  clinicalPresentation: 'Acute onset of chest pain',
+  imagingFindings: 'Chest X-ray shows...',
+  differentialDiagnosis: ['Myocardial Infarction', 'Pulmonary Embolism'],
+  finalDiagnosis: 'Acute Coronary Syndrome',
+  patientDemographics: {
+    age: 45,
+    gender: 'male',
+    presentingComplaint: 'Chest pain'
   },
-  isDeleted: false
+  images: [
+    {
+      url: 'https://example.com/image1.jpg',
+      description: 'Chest X-ray',
+      order: 1
+    }
+  ],
+  teachingPoints: [
+    {
+      title: 'Key Learning Point',
+      description: 'Important teaching point about this case',
+      order: 1
+    }
+  ]
 };
 
 export const mockComment: Comment = {
-  id: 'test-comment-id',
-  caseId: mockCase.id,
-  userId: mockUser.id,
-  text: 'This is a test comment',
+  id: 'comment1',
+  caseId: 'case1',
+  authorId: 'user1',
+  content: 'Test comment',
   createdAt: new Date(),
   updatedAt: new Date(),
-  parentId: undefined,
   likeCount: 0,
-  isEdited: false,
-  isDeleted: false
+  replyCount: 0,
 }; 

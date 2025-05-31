@@ -1,4 +1,12 @@
-import type { Comment } from '../../models/Comment';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Textarea } from '@/components/ui/Textarea';
+import { Loader2, Trash2 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'react-hot-toast';
+import { CaseService } from '@/services/CaseService';
+import { useAuth } from '@/hooks/useAuth';
+import type { Comment } from '@/types/comment';
 
 interface CommentSectionProps {
   caseId: string;
@@ -15,7 +23,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const caseService = new CaseService();
 
   useEffect(() => {
@@ -37,7 +45,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser?.uid) {
+    if (!currentUser?.id) {
       toast.error('Please sign in to comment');
       return;
     }
@@ -49,7 +57,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
     setIsSubmitting(true);
     try {
-      await caseService.addComment(caseId, currentUser.uid, newComment.trim());
+      await caseService.addComment(caseId, currentUser.id, newComment.trim());
       setNewComment('');
       await loadComments();
       onCommentChange?.(comments.length + 1);
@@ -67,7 +75,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
     try {
       await caseService.deleteComment(commentId, caseId);
-      setComments(prev => prev.filter(c => c.id !== commentId));
+      setComments((prev: Comment[]) => prev.filter((c: Comment) => c.id !== commentId));
       onCommentChange?.(comments.length - 1);
       toast.success('Comment deleted successfully');
     } catch (error) {
@@ -89,19 +97,19 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           <p className="text-gray-500 text-center py-4">No comments yet. Be the first to comment!</p>
         ) : (
           <div className="space-y-4">
-            {comments.map((comment) => (
+            {comments.map((comment: Comment) => (
               <div
                 key={comment.id}
                 className="bg-gray-50 rounded-lg p-4"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-medium">{comment.userId}</p>
+                    <p className="font-medium">{comment.authorId}</p>
                     <p className="text-sm text-gray-500">
                       {formatDistanceToNow(comment.createdAt, { addSuffix: true })}
                     </p>
                   </div>
-                  {currentUser?.uid === comment.userId && (
+                  {currentUser?.id === comment.authorId && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -112,7 +120,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     </Button>
                   )}
                 </div>
-                <p className="text-gray-700">{comment.text}</p>
+                <p className="text-gray-700">{comment.content}</p>
               </div>
             ))}
           </div>
@@ -123,7 +131,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         <form onSubmit={handleSubmitComment} className="space-y-4">
           <Textarea
             value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewComment(e.target.value)}
             placeholder="Write a comment..."
             className="min-h-[100px]"
             disabled={isSubmitting}

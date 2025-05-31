@@ -1,3 +1,4 @@
+import { db } from '@/lib/firebase';
 import {
   collection,
   doc,
@@ -7,10 +8,10 @@ import {
   deleteDoc,
   query,
   where,
-  DocumentData,
   increment,
   updateDoc,
 } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 import { BaseService } from './BaseService';
 
 interface Like {
@@ -141,5 +142,25 @@ export class LikeService extends BaseService {
       targetType: data.targetType,
       createdAt: data.createdAt?.toDate(),
     };
+  }
+
+  async likeCase(caseId: string, userId: string): Promise<void> {
+    try {
+      const likeRef = doc(this.likesCollection, `${caseId}_${userId}`);
+      const likeDoc = await getDoc(likeRef);
+
+      if (!likeDoc.exists()) {
+        await addDoc(this.likesCollection, {
+          caseId,
+          userId,
+          createdAt: new Date(),
+        });
+        await updateDoc(doc(this.casesCollection, caseId), {
+          likeCount: increment(1),
+        });
+      }
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 } 

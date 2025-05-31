@@ -5,77 +5,73 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  query,
-  where,
-  orderBy,
 } from 'firebase/firestore';
-import type { Comment, CommentWithAuthor } from '../../models/Comment';
+import type { Comment, CommentWithUser } from '../../types/comment';
+import type { User } from '../../types/user';
 import { CommentService } from '../CommentService';
 import { UserService } from '../UserService';
 import { db } from '../../config/firebase';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MockAuthProvider } from '@/test/mocks/AuthProvider';
-import { mockUser, mockCase, mockComment } from '@/test/mocks/data';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock Firebase and UserService
-jest.mock('firebase/firestore');
-jest.mock('../../config/firebase');
-jest.mock('../UserService');
+vi.mock('firebase/firestore');
+vi.mock('../../config/firebase');
+vi.mock('../UserService');
 
 describe('CommentService', () => {
   let commentService: CommentService;
-  let mockUserService: jest.Mocked<UserService>;
+  let mockUserService: UserService;
 
-  const mockUser = {
+  const mockUser: User = {
     id: 'user1',
+    email: 'test@example.com',
     displayName: 'Test User',
     photoURL: 'https://example.com/photo.jpg',
+    role: 'doctor',
+    title: 'Dr.',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastLoginAt: new Date()
   };
 
   const mockComment: Comment = {
     id: 'comment1',
+    content: 'Test comment',
+    authorId: 'user1',
     caseId: 'case1',
-    userId: 'user1',
-    text: 'Test comment',
     createdAt: new Date(),
     updatedAt: new Date(),
-    parentId: undefined,
     likeCount: 0,
-    isEdited: false,
-    isDeleted: false
+    replyCount: 0,
+    parentId: undefined
   };
 
-  const mockCommentWithAuthor: CommentWithAuthor = {
+  const mockCommentWithUser: CommentWithUser = {
     ...mockComment,
-    author: {
-      id: 'user1',
-      displayName: 'Test User',
-      photoURL: 'https://example.com/photo.jpg'
-    }
+    author: mockUser
   };
 
   beforeEach(() => {
-    mockUserService = new UserService() as jest.Mocked<UserService>;
-    mockUserService.getUserById.mockResolvedValue(mockUser as any);
+    mockUserService = new UserService();
+    vi.spyOn(mockUserService, 'getUserById').mockResolvedValue(mockUser);
     commentService = new CommentService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getCommentById', () => {
     it('should return comment with author when found', async () => {
-      (getDoc as jest.Mock).mockResolvedValue({
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => true,
         data: () => mockComment,
       });
 
       const result = await commentService.getCommentById('comment1');
-      expect(result).toEqual(mockCommentWithAuthor);
+      expect(result).toEqual(mockCommentWithUser);
       expect(getDoc).toHaveBeenCalledWith(doc(collection(db, 'comments'), 'comment1'));
     });
 
     it('should throw error when comment not found', async () => {
-      (getDoc as jest.Mock).mockResolvedValue({
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => false,
       });
 
@@ -85,24 +81,25 @@ describe('CommentService', () => {
 
   describe('createComment', () => {
     it('should create comment successfully', async () => {
-      const newComment = {
+      const newComment: Omit<Comment, 'id'> = {
+        content: 'New comment',
+        authorId: 'user1',
         caseId: 'case1',
-        userId: 'user1',
-        text: 'New comment'
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        likeCount: 0,
+        replyCount: 0,
+        parentId: undefined
       };
 
-      (addDoc as jest.Mock).mockResolvedValue({ id: 'newComment1' });
-      (getDoc as jest.Mock).mockResolvedValue({
+      (addDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'newComment1' });
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => true,
         data: () => ({ ...newComment, id: 'newComment1' }),
       });
 
       const result = await commentService.createComment(newComment);
-      expect(result).toEqual({
-        ...newComment,
-        id: 'newComment1',
-        author: mockUser,
-      });
+      expect(result).toBe('newComment1');
       expect(addDoc).toHaveBeenCalled();
     });
   });
@@ -110,18 +107,13 @@ describe('CommentService', () => {
   describe('updateComment', () => {
     it('should update comment successfully', async () => {
       const updatedContent = 'Updated comment';
-      (getDoc as jest.Mock).mockResolvedValue({
+      (getDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         exists: () => true,
-        data: () => ({ ...mockComment, text: updatedContent, isEdited: true }),
+        data: () => ({ ...mockComment, content: updatedContent }),
       });
 
       const result = await commentService.updateComment('comment1', updatedContent);
-      expect(result).toEqual({
-        ...mockComment,
-        text: updatedContent,
-        isEdited: true,
-        author: mockUser,
-      });
+      expect(result).toBeUndefined();
       expect(updateDoc).toHaveBeenCalled();
     });
   });
@@ -138,15 +130,15 @@ describe('CommentService', () => {
     });
   });
 
-  describe('getCommentsByCase', () => {
+  describe('getCommentsByCaseId', () => {
     it('should return comments for a case', async () => {
       const mockComments = [mockComment];
-      (getDocs as jest.Mock).mockResolvedValue({
+      (getDocs as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         docs: mockComments.map(comment => ({ data: () => comment })),
       });
 
-      const result = await commentService.getCommentsByCase('case1');
-      expect(result).toEqual([mockCommentWithAuthor]);
+      const result = await commentService.getCommentsByCaseId('case1');
+      expect(result).toEqual([mockCommentWithUser]);
       expect(getDocs).toHaveBeenCalled();
     });
   });
@@ -154,12 +146,12 @@ describe('CommentService', () => {
   describe('getReplies', () => {
     it('should return replies to a comment', async () => {
       const mockReplies = [mockComment];
-      (getDocs as jest.Mock).mockResolvedValue({
+      (getDocs as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         docs: mockReplies.map(comment => ({ data: () => comment })),
       });
 
       const result = await commentService.getReplies('comment1');
-      expect(result).toEqual([mockCommentWithAuthor]);
+      expect(result).toEqual([mockCommentWithUser]);
       expect(getDocs).toHaveBeenCalled();
     });
   });

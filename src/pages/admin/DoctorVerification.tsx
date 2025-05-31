@@ -1,170 +1,150 @@
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  DocumentData,
+} from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import {
+  Box,
+  Typography,
+  Paper,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+} from '@mui/material';
+import { User } from '../../types/user';
 
 interface VerificationRequest {
   id: string;
   userId: string;
-  displayName: string;
-  email: string;
-  documents: {
-    license: string;
-    certification: string;
-    idProof: string;
-  };
   status: 'pending' | 'approved' | 'rejected';
   submittedAt: Date;
+  documents: string[];
+  user: {
+    id: string;
+    displayName: string;
+    email: string;
+    title: string;
+    specialization: string;
+    institution: string;
+  };
 }
 
-const DoctorVerification: React.FC = () => {
+export const DoctorVerification: React.FC = () => {
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth();
 
   useEffect(() => {
-    fetchVerificationRequests();
+    fetchRequests();
   }, []);
 
-  const fetchVerificationRequests = async () => {
+  const fetchRequests = async () => {
     try {
       const q = query(
         collection(db, 'verificationRequests'),
         where('status', '==', 'pending')
       );
       const querySnapshot = await getDocs(q);
-      const requestsData = querySnapshot.docs.map(doc => ({
+      const requestsData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        submittedAt: doc.data().submittedAt.toDate(),
+        submittedAt: doc.data().submittedAt?.toDate(),
       })) as VerificationRequest[];
       setRequests(requestsData);
     } catch (error) {
       console.error('Error fetching verification requests:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleVerification = async (requestId: string, status: 'approved' | 'rejected') => {
+  const handleVerification = async (requestId: string, action: 'approve' | 'reject') => {
     try {
       const requestRef = doc(db, 'verificationRequests', requestId);
+      const request = requests.find((r) => r.id === requestId);
+
+      if (!request) return;
+
       await updateDoc(requestRef, {
-        status,
-        reviewedBy: currentUser?.uid,
-        reviewedAt: new Date(),
+        status: action === 'approve' ? 'approved' : 'rejected',
+        processedAt: new Date(),
       });
 
-      // Update user role if approved
-      if (status === 'approved') {
-        const request = requests.find(r => r.id === requestId);
-        if (request) {
-          const userRef = doc(db, 'users', request.userId);
-          await updateDoc(userRef, {
-            role: 'doctor',
-            isVerified: true,
-          });
-        }
+      if (action === 'approve') {
+        const userRef = doc(db, 'users', request.userId);
+        await updateDoc(userRef, {
+          doctorVerificationStatus: 'verified',
+        });
       }
 
-      // Refresh the list
-      await fetchVerificationRequests();
-      setSelectedRequest(null);
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (error) {
-      console.error('Error updating verification status:', error);
+      console.error('Error processing verification request:', error);
     }
   };
 
-  if (loading) {
-    return <div className="p-4">Loading...</div>;
-  }
-
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">Doctor Verification Requests</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Request List */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-4">Pending Requests</h2>
-          {requests.length === 0 ? (
-            <p className="text-gray-500">No pending verification requests</p>
-          ) : (
-            <div className="space-y-4">
-              {requests.map(request => (
-                <div
-                  key={request.id}
-                  className={`p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                    selectedRequest?.id === request.id ? 'border-blue-500' : ''
-                  }`}
-                  onClick={() => setSelectedRequest(request)}
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Doctor Verification
+      </Typography>
+      <Grid container spacing={3}>
+        {requests.map((request) => (
+          <Grid item xs={12} md={6} key={request.id}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {request.user.displayName}
+                </Typography>
+                <Typography color="textSecondary" gutterBottom>
+                  {request.user.email}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  Title: {request.user.title}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  Specialization: {request.user.specialization}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  Institution: {request.user.institution}
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Verification Documents:
+                  </Typography>
+                  {request.documents.map((doc, index) => (
+                    <Chip
+                      key={index}
+                      label={`Document ${index + 1}`}
+                      onClick={() => window.open(doc, '_blank')}
+                      sx={{ mr: 1, mb: 1 }}
+                    />
+                  ))}
+                </Box>
+              </CardContent>
+              <CardActions>
+                <Button
+                  color="success"
+                  onClick={() => handleVerification(request.id, 'approve')}
                 >
-                  <h3 className="font-medium">{request.displayName}</h3>
-                  <p className="text-sm text-gray-600">{request.email}</p>
-                  <p className="text-sm text-gray-500">
-                    Submitted: {request.submittedAt.toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Document Viewer */}
-        <div className="bg-white rounded-lg shadow p-4">
-          {selectedRequest ? (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">
-                Documents for {selectedRequest.displayName}
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2">Medical License</h3>
-                  <img
-                    src={selectedRequest.documents.license}
-                    alt="Medical License"
-                    className="max-w-full h-auto rounded-lg"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">Certification</h3>
-                  <img
-                    src={selectedRequest.documents.certification}
-                    alt="Certification"
-                    className="max-w-full h-auto rounded-lg"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">ID Proof</h3>
-                  <img
-                    src={selectedRequest.documents.idProof}
-                    alt="ID Proof"
-                    className="max-w-full h-auto rounded-lg"
-                  />
-                </div>
-                <div className="flex space-x-4 mt-6">
-                  <button
-                    onClick={() => handleVerification(selectedRequest.id, 'approved')}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleVerification(selectedRequest.id, 'rejected')}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              Select a request to view documents
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                  Approve
+                </Button>
+                <Button
+                  color="error"
+                  onClick={() => handleVerification(request.id, 'reject')}
+                >
+                  Reject
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
-};
-
-export default DoctorVerification; 
+}; 

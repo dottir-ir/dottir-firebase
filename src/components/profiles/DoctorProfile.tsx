@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -13,6 +14,11 @@ import {
   Divider,
 } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { UserProfile } from './UserProfile';
+import type { User } from '../../models/User';
 
 interface DoctorProfileProps {
   user: User;

@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -12,6 +14,9 @@ import {
   Chip,
   Autocomplete,
 } from '@mui/material';
+import { toast } from 'react-hot-toast';
+import { CaseService } from '@/services/CaseService';
+import type { Case } from '@/types/case';
 
 const caseService = new CaseService();
 
@@ -27,24 +32,22 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
   const [caseData, setCaseData] = useState<Partial<Case>>({
     title: '',
     description: '',
-    content: '',
     status: 'draft',
     tags: [],
     category: '',
     difficulty: 'beginner',
-    patientAge: 0,
-    patientGender: 'male',
+    clinicalHistory: '',
     clinicalPresentation: '',
     imagingFindings: '',
-    diagnosis: '',
-    treatment: '',
-    outcome: '',
-    references: [],
-    teachingPoints: {
-      keyPoints: [],
-      references: [],
-      relatedCases: []
-    }
+    differentialDiagnosis: [],
+    finalDiagnosis: '',
+    patientDemographics: {
+      age: 0,
+      gender: 'male',
+      presentingComplaint: ''
+    },
+    images: [],
+    teachingPoints: []
   });
 
   useEffect(() => {
@@ -88,10 +91,35 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
   const handleChange = (field: keyof Case) => (
     e: React.ChangeEvent<HTMLInputElement | { value: unknown }> | { target: { value: unknown } }
   ) => {
-    setCaseData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
+    if (field === 'patientDemographics') {
+      const { name, value } = e.target as { name: string; value: unknown };
+      const newValue = name === 'age' ? Number(value) || 0 : value;
+      setCaseData((prev) => {
+        const demographics = prev.patientDemographics || {
+          age: 0,
+          gender: 'male',
+          presentingComplaint: ''
+        };
+        return {
+          ...prev,
+          patientDemographics: {
+            ...demographics,
+            [name]: newValue
+          }
+        } as Partial<Case>;
+      });
+    } else if (field === 'differentialDiagnosis') {
+      const diagnoses = (e.target as { value: string }).value.split('\n').filter(d => d.trim());
+      setCaseData((prev) => ({
+        ...prev,
+        differentialDiagnosis: diagnoses
+      }));
+    } else {
+      setCaseData((prev) => ({
+        ...prev,
+        [field]: e.target.value
+      }));
+    }
   };
 
   if (loading) {
@@ -124,18 +152,6 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
               onChange={handleChange('description')}
               multiline
               rows={3}
-              required
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Content"
-              value={caseData.content}
-              onChange={handleChange('content')}
-              multiline
-              rows={10}
               required
             />
           </Grid>
@@ -179,8 +195,9 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
               fullWidth
               type="number"
               label="Patient Age"
-              value={caseData.patientAge}
-              onChange={handleChange('patientAge')}
+              name="age"
+              value={caseData.patientDemographics?.age ?? 0}
+              onChange={handleChange('patientDemographics')}
               required
             />
           </Grid>
@@ -189,9 +206,10 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
             <FormControl fullWidth>
               <InputLabel>Patient Gender</InputLabel>
               <Select
-                value={caseData.patientGender}
+                name="gender"
+                value={caseData.patientDemographics?.gender ?? 'male'}
                 label="Patient Gender"
-                onChange={handleChange('patientGender')}
+                onChange={handleChange('patientDemographics')}
                 required
               >
                 <MenuItem value="male">Male</MenuItem>
@@ -199,6 +217,31 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
                 <MenuItem value="other">Other</MenuItem>
               </Select>
             </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Presenting Complaint"
+              name="presentingComplaint"
+              value={caseData.patientDemographics?.presentingComplaint ?? ''}
+              onChange={handleChange('patientDemographics')}
+              multiline
+              rows={2}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Clinical History"
+              value={caseData.clinicalHistory}
+              onChange={handleChange('clinicalHistory')}
+              multiline
+              rows={4}
+              required
+            />
           </Grid>
 
           <Grid item xs={12}>
@@ -228,9 +271,9 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Diagnosis"
-              value={caseData.diagnosis}
-              onChange={handleChange('diagnosis')}
+              label="Differential Diagnosis"
+              value={caseData.differentialDiagnosis?.join('\n')}
+              onChange={handleChange('differentialDiagnosis')}
               multiline
               rows={4}
               required
@@ -240,21 +283,9 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Treatment"
-              value={caseData.treatment}
-              onChange={handleChange('treatment')}
-              multiline
-              rows={4}
-              required
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Outcome"
-              value={caseData.outcome}
-              onChange={handleChange('outcome')}
+              label="Final Diagnosis"
+              value={caseData.finalDiagnosis}
+              onChange={handleChange('finalDiagnosis')}
               multiline
               rows={4}
               required
@@ -268,7 +299,7 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
               options={[]}
               value={caseData.tags || []}
               onChange={(_, newValue) => {
-                setCaseData(prev => ({
+                setCaseData((prev: Partial<Case>) => ({
                   ...prev,
                   tags: newValue
                 }));
@@ -294,67 +325,18 @@ export const CaseEditForm: React.FC<CaseEditFormProps> = ({ onSave }) => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Key Teaching Points"
-              value={caseData.teachingPoints?.keyPoints?.join('\n') || ''}
+              label="Teaching Points (one per line)"
+              value={caseData.teachingPoints?.map((tp: any) => tp.title).join('\n') || ''}
               onChange={(e) => {
                 const points = e.target.value.split('\n').filter(Boolean);
-                setCaseData(prev => ({
+                setCaseData((prev: Partial<Case>) => ({
                   ...prev,
-                  teachingPoints: {
-                    ...prev.teachingPoints,
-                    keyPoints: points,
-                    references: prev.teachingPoints?.references ?? [],
-                    relatedCases: prev.teachingPoints?.relatedCases ?? []
-                  }
+                  teachingPoints: points.map((title, idx) => ({ title, description: '', order: idx }))
                 }));
               }}
               multiline
               rows={4}
               required
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="References"
-              value={caseData.teachingPoints?.references?.join('\n') || ''}
-              onChange={(e) => {
-                const refs = e.target.value.split('\n').filter(Boolean);
-                setCaseData(prev => ({
-                  ...prev,
-                  teachingPoints: {
-                    ...prev.teachingPoints,
-                    references: refs,
-                    keyPoints: prev.teachingPoints?.keyPoints ?? [],
-                    relatedCases: prev.teachingPoints?.relatedCases ?? []
-                  }
-                }));
-              }}
-              multiline
-              rows={4}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Related Cases"
-              value={caseData.teachingPoints?.relatedCases?.join('\n') || ''}
-              onChange={(e) => {
-                const cases = e.target.value.split('\n').filter(Boolean);
-                setCaseData(prev => ({
-                  ...prev,
-                  teachingPoints: {
-                    ...prev.teachingPoints,
-                    relatedCases: cases,
-                    keyPoints: prev.teachingPoints?.keyPoints ?? [],
-                    references: prev.teachingPoints?.references ?? []
-                  }
-                }));
-              }}
-              multiline
-              rows={4}
             />
           </Grid>
 

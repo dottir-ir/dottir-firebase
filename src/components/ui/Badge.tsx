@@ -1,46 +1,26 @@
-import { useTheme } from '../../contexts/ThemeContext';
+import React from 'react';
+import { Chip, ChipProps } from '@mui/material';
 
-interface BadgeProps {
-  children: React.ReactNode;
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error';
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+interface BadgeProps extends Omit<ChipProps, 'color' | 'variant'> {
+  status?: 'default' | 'success' | 'warning' | 'error' | 'info';
+  chipVariant?: 'filled' | 'outlined';
 }
 
-export const Badge: React.FC<BadgeProps> = ({
-  children,
-  variant = 'default',
-  size = 'md',
-  className = '',
-}) => {
-  const { theme } = useTheme();
+const getColor = (status: BadgeProps['status']): ChipProps['color'] => {
+  switch (status) {
+    case 'success':
+      return 'success';
+    case 'warning':
+      return 'warning';
+    case 'error':
+      return 'error';
+    case 'info':
+      return 'info';
+    default:
+      return 'default';
+  }
+};
 
-  const variantStyles = {
-    default: `bg-${theme.colors.surface} text-${theme.colors.text}`,
-    primary: `bg-${theme.colors.primary} text-white`,
-    secondary: `bg-${theme.colors.secondary} text-white`,
-    success: 'bg-green-500 text-white',
-    warning: 'bg-yellow-500 text-white',
-    error: 'bg-red-500 text-white',
-  };
-
-  const sizeStyles = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-2.5 py-0.5',
-    lg: 'text-base px-3 py-1',
-  };
-
-  return (
-    <span
-      className={`
-        inline-flex items-center
-        rounded-full font-medium
-        ${variantStyles[variant]}
-        ${sizeStyles[size]}
-        ${className}
-      `}
-    >
-      {children}
-    </span>
-  );
-}; 
+export function Badge({ status = 'default', chipVariant = 'filled', ...props }: BadgeProps) {
+  return <Chip color={getColor(status)} variant={chipVariant} {...props} />;
+} 

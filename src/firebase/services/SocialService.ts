@@ -10,7 +10,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import type { Comment, Like, Save } from '../config';
-import { db } from '../config';
+import { db } from '@/lib/firebase';
 
 export class SocialService {
   static async addComment(caseId: string, userId: string, content: string): Promise<string> {

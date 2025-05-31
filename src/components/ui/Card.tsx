@@ -1,136 +1,85 @@
-import { useTheme } from '../../contexts/ThemeContext';
+import React from 'react';
+import {
+  Card as MuiCard,
+  CardContent as MuiCardContent,
+  CardHeader as MuiCardHeader,
+  CardActions,
+  CardProps as MuiCardProps,
+} from '@mui/material';
 
-interface CardProps {
-  children: React.ReactNode;
+interface CardProps extends Omit<MuiCardProps, 'variant' | 'title'> {
   title?: string;
-  subtitle?: string;
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
-  variant?: 'elevated' | 'outlined' | 'filled';
+  subheader?: string;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+  variant?: 'elevation' | 'outlined';
   className?: string;
   onClick?: () => void;
 }
 
-export const Card: React.FC<CardProps> = ({
-  children,
+export function Card({
   title,
-  subtitle,
-  header,
-  footer,
-  variant = 'elevated',
-  className = '',
-  onClick,
-}) => {
-  const { theme } = useTheme();
-
-  const variantStyles = {
-    elevated: `
-      bg-${theme.colors.background}
-      shadow-lg
-    `,
-    outlined: `
-      bg-${theme.colors.background}
-      border border-gray-200
-    `,
-    filled: `
-      bg-${theme.colors.surface}
-    `,
-  };
-
+  subheader,
+  actions,
+  children,
+  variant = 'elevation',
+  ...props
+}: CardProps) {
   return (
-    <div
+    <MuiCard
+      variant={variant}
+      {...props}
       className={`
         rounded-lg overflow-hidden
-        ${variantStyles[variant]}
-        ${className}
-        ${onClick ? 'cursor-pointer' : ''}
+        ${props.className || ''}
+        ${props.onClick ? 'cursor-pointer' : ''}
       `}
-      onClick={onClick}
+      onClick={props.onClick}
     >
-      {(header || title) && (
-        <CardHeader>
-          {header || (
-            <>
-              {title && (
-                <h3
-                  className={`
-                    text-lg font-medium
-                    text-${theme.colors.text}
-                  `}
-                >
-                  {title}
-                </h3>
-              )}
-              {subtitle && (
-                <p
-                  className={`
-                    mt-1 text-sm
-                    text-${theme.colors.secondary}
-                  `}
-                >
-                  {subtitle}
-                </p>
-              )}
-            </>
-          )}
-        </CardHeader>
+      {(title || subheader) && (
+        <MuiCardHeader title={title} subheader={subheader} />
       )}
-      <CardContent>{children}</CardContent>
-      {footer && <CardFooter>{footer}</CardFooter>}
-    </div>
+      <MuiCardContent>{children}</MuiCardContent>
+      {actions && <CardActions>{actions}</CardActions>}
+    </MuiCard>
   );
-};
+}
 
 interface CardHeaderProps {
   children: React.ReactNode;
   className?: string;
 }
 
-export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = '' }) => {
-  const { theme } = useTheme();
+export function CardHeader({ children, className = '' }: CardHeaderProps) {
   return (
-    <div
-      className={`
-        px-6 py-4
-        border-b border-gray-200
-        ${className}
-      `}
-    >
+    <div className={`px-6 py-4 border-b border-gray-200 ${className}`}>
       {children}
     </div>
   );
-};
+}
 
 interface CardContentProps {
   children: React.ReactNode;
   className?: string;
 }
 
-export const CardContent: React.FC<CardContentProps> = ({ children, className = '' }) => {
+export function CardContent({ children, className = '' }: CardContentProps) {
   return (
     <div className={`px-6 py-4 ${className}`}>
       {children}
     </div>
   );
-};
+}
 
 interface CardFooterProps {
   children: React.ReactNode;
   className?: string;
 }
 
-export const CardFooter: React.FC<CardFooterProps> = ({ children, className = '' }) => {
-  const { theme } = useTheme();
+export function CardFooter({ children, className = '' }: CardFooterProps) {
   return (
-    <div
-      className={`
-        px-6 py-4
-        border-t border-gray-200
-        bg-${theme.colors.surface}
-        ${className}
-      `}
-    >
+    <div className={`px-6 py-4 border-t border-gray-200 ${className}`}>
       {children}
     </div>
   );
-}; 
+} 

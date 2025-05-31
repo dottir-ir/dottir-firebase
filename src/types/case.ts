@@ -5,6 +5,7 @@ export interface Case {
   title: string;
   description: string;
   authorId: string;
+  authorImage?: string;
   status: 'draft' | 'published' | 'archived';
   tags: string[];
   category: string;
@@ -17,6 +18,10 @@ export interface Case {
   commentCount: number;
   saveCount: number;
   clinicalHistory: string;
+  clinicalPresentation: string;
+  imagingFindings: string;
+  differentialDiagnosis: string[];
+  finalDiagnosis: string;
   patientDemographics: {
     age: number;
     gender: string;
@@ -140,73 +145,26 @@ export interface CaseTags {
   customTags?: string[];
 }
 
-export type CaseFormData = any; // Assuming the form data structure is not provided in the original file or the new file
-
-export interface CaseMetadata {
-  id: string;
-  title: string;
-  description: string;
-  authorId: string;
-  status: 'draft' | 'published' | 'archived';
-  tags: string[];
-  category: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
-  saveCount: number;
-}
-
 export interface CaseFormData {
-  // Patient demographics section
   patientDemographics: {
     age: number;
     gender: 'male' | 'female' | 'other';
-    ethnicity?: string;
-    height?: number;
-    weight?: number;
-    bmi?: number;
   };
-  
-  // Clinical history section
   clinicalHistory: {
     presentation: string;
     history: string;
-    pastMedicalHistory?: string;
-    medications?: string[];
-    allergies?: string[];
-    familyHistory?: string;
-    socialHistory?: string;
   };
-  
-  // Images section
-  images: {
-    id: string;
-    url: string;
-    fileName: string;
-    alt?: string;
-  }[];
-  
-  // Findings and diagnosis section
+  images: string[];
   imagingFindings: string;
   differentialDiagnosis: string[];
   finalDiagnosis: string;
-  
-  // Teaching points section
   teachingPoints: {
-    keyPoints: string[];
-    references?: string[];
-    relatedCases?: string[];
-  };
-  
-  // Tags section
+    title: string;
+    description: string;
+    order: number;
+  }[];
   tags: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  
-  // Basic case info
   title: string;
   description: string;
   content: string;

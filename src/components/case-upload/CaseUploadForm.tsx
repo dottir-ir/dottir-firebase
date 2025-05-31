@@ -1,4 +1,12 @@
+import React, { useState } from 'react';
+import { Box, Button, Paper, Alert } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
+import { CaseFormData } from '../../types/case';
+import { PatientDemographicsStep } from './steps/PatientDemographicsStep';
+import { ClinicalHistoryStep } from './steps/ClinicalHistoryStep';
+import { FindingsStep } from './steps/FindingsStep';
+import { TeachingPointsStep } from './steps/TeachingPointsStep';
+import { TagsStep } from './steps/TagsStep';
 
 const steps = [
   'Patient Demographics',
@@ -28,7 +36,7 @@ const CaseUploadForm: React.FC = () => {
     imagingFindings: '',
     differentialDiagnosis: [],
     finalDiagnosis: '',
-    teachingPoints: { keyPoints: [] },
+    teachingPoints: [],
     tags: [],
     difficulty: 'beginner',
     title: '',

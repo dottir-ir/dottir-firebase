@@ -9,9 +9,7 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
-  limit,
-  startAfter
+  orderBy
 } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
 import type { Comment, CommentWithUser } from '../types/comment';

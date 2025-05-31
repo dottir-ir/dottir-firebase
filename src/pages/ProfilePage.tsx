@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Box,
@@ -5,7 +6,17 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { caseService } from '../services/CaseService';
+import { Edit as EditIcon } from '@mui/icons-material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { CaseService } from '@/services/CaseService';
+import { UserService } from '@/services/UserService';
+import { useAuth } from '../hooks/useAuth';
+import type { User } from '../types/user';
+import type { CaseMetadata } from '../types/case';
+import { EditProfile } from '../components/profiles/EditProfile';
+import { DoctorProfile } from '../components/profiles/DoctorProfile';
+import { StudentProfile } from '../components/profiles/StudentProfile';
+import { UserProfile } from '../components/profiles/UserProfile';
 
 interface SavedCase {
   id: string;
@@ -21,10 +32,12 @@ interface LearningMetrics {
   lastActive: Date;
 }
 
-export const ProfilePage: React.FC = () => {
+export const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
-  const { currentUser, updateProfile, error, clearError } = useAuth();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const userService = new UserService();
+  const caseService = new CaseService();
   
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +73,7 @@ export const ProfilePage: React.FC = () => {
 
           // Fetch case details for each saved case
           const savedCasesWithDetails = await Promise.all(
-            saved.map(async (savedCase) => {
+            saved.map(async (savedCase: { caseId: string; id: string; savedAt: Date; progress: number }) => {
               try {
                 const caseDetails = await caseService.getCaseById(savedCase.caseId);
                 return {
@@ -76,12 +89,11 @@ export const ProfilePage: React.FC = () => {
             })
           );
 
-          setSavedCases(savedCasesWithDetails.filter((case_): case_ is SavedCase => case_ !== null));
+          setSavedCases(savedCasesWithDetails.filter((case_: SavedCase | null): case_ is SavedCase => case_ !== null));
           setLearningMetrics(metrics);
         }
       } catch (err) {
-        // Use context error handling
-        clearError();
+        console.error('Error fetching user data:', err);
         if (err instanceof Error) {
           throw err;
         }
@@ -93,7 +105,7 @@ export const ProfilePage: React.FC = () => {
     if (userId) {
       fetchUserData();
     }
-  }, [userId, clearError]);
+  }, [userId]);
 
   const handleProfileUpdate = async (updatedUser: User) => {
     setUser(updatedUser);
@@ -110,7 +122,7 @@ export const ProfilePage: React.FC = () => {
         await userService.deleteCase(caseId);
         setPublishedCases((prev) => prev.filter((c) => c.id !== caseId));
       } catch (err) {
-        clearError();
+        console.error('Error deleting case:', err);
         if (err instanceof Error) {
           throw err;
         }
@@ -123,14 +135,6 @@ export const ProfilePage: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">{error}</Alert>
-      </Container>
     );
   }
 

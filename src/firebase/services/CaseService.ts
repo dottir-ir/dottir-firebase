@@ -14,6 +14,8 @@ import {
   CollectionReference,
 } from 'firebase/firestore';
 import { UserService } from './UserService';
+import { db, storage, Case } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 export class CaseService {
   static async createCase(
@@ -94,7 +96,7 @@ export class CaseService {
 
     // Delete associated images
     await Promise.all(
-      caseData.images.map(async (imageUrl) => {
+      caseData.images.map(async (imageUrl: string) => {
         const imageRef = ref(storage, imageUrl);
         await deleteObject(imageRef);
       })

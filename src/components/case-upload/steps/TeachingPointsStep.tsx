@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Add as AddIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -7,172 +9,86 @@ import {
   Stack,
   IconButton,
 } from '@mui/material';
-import type { CaseUpload } from '../../../types/case';
+import type { CaseFormData } from '../../../types/case';
+import type { StepProps } from '../../../types/form';
 
-export default function TeachingPointsStep() {
-  const { register, formState: { errors }, setValue, watch } = useFormContext<CaseUpload>();
-  const [newKeyPoint, setNewKeyPoint] = React.useState('');
-  const [newReference, setNewReference] = React.useState('');
-  const [newRelatedCase, setNewRelatedCase] = React.useState('');
+export const TeachingPointsStep: React.FC<StepProps> = ({
+  formData,
+  updateFormData,
+  nextStep,
+  prevStep,
+  errors
+}) => {
+  const [newPoint, setNewPoint] = useState('');
 
-  const keyPoints = watch('teachingPoints.keyPoints') || [];
-  const references = watch('teachingPoints.references') || [];
-  const relatedCases = watch('teachingPoints.relatedCases') || [];
-
-  const handleAddKeyPoint = () => {
-    if (newKeyPoint.trim()) {
-      setValue('teachingPoints.keyPoints', [...keyPoints, newKeyPoint.trim()]);
-      setNewKeyPoint('');
+  const handleAddPoint = () => {
+    if (newPoint.trim()) {
+      const updatedPoints = [
+        ...(formData.teachingPoints || []),
+        { title: newPoint.trim(), description: '', order: formData.teachingPoints?.length || 0 }
+      ];
+      updateFormData({ teachingPoints: updatedPoints });
+      setNewPoint('');
     }
   };
 
-  const handleAddReference = () => {
-    if (newReference.trim()) {
-      setValue('teachingPoints.references', [...references, newReference.trim()]);
-      setNewReference('');
-    }
+  const handleRemovePoint = (index: number) => {
+    const updatedPoints = formData.teachingPoints?.filter((_, i) => i !== index) || [];
+    updateFormData({ teachingPoints: updatedPoints });
   };
 
-  const handleAddRelatedCase = () => {
-    if (newRelatedCase.trim()) {
-      setValue('teachingPoints.relatedCases', [...relatedCases, newRelatedCase.trim()]);
-      setNewRelatedCase('');
-    }
-  };
-
-  const handleRemoveKeyPoint = (index: number) => {
-    setValue(
-      'teachingPoints.keyPoints',
-      keyPoints.filter((_, i) => i !== index)
-    );
-  };
-
-  const handleRemoveReference = (index: number) => {
-    setValue(
-      'teachingPoints.references',
-      references.filter((_, i) => i !== index)
-    );
-  };
-
-  const handleRemoveRelatedCase = (index: number) => {
-    setValue(
-      'teachingPoints.relatedCases',
-      relatedCases.filter((_, i) => i !== index)
-    );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    nextStep();
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Teaching Points
-      </Typography>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Typography gutterBottom>Key Teaching Points</Typography>
-          <Box sx={{ mb: 2 }}>
-            <TextField
-              fullWidth
-              label="Add Key Teaching Point"
-              value={newKeyPoint}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewKeyPoint(e.target.value)}
-              onKeyPress={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddKeyPoint();
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton onClick={handleAddKeyPoint} color="primary">
-                    <AddIcon />
-                  </IconButton>
-                ),
-              }}
-            />
-          </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {keyPoints.map((point, index) => (
-              <Chip
-                key={index}
-                label={point}
-                onDelete={() => handleRemoveKeyPoint(index)}
-                sx={{ mb: 1 }}
+    <form onSubmit={handleSubmit}>
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          Teaching Points
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography gutterBottom>Teaching Points (one per line)</Typography>
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                fullWidth
+                label="Add Teaching Point"
+                value={newPoint}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPoint(e.target.value)}
+                onKeyPress={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddPoint();
+                  }
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton onClick={handleAddPoint} color="primary">
+                      <AddIcon />
+                    </IconButton>
+                  ),
+                }}
               />
-            ))}
-          </Stack>
+            </Box>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {formData.teachingPoints?.map((point, index) => (
+                <Chip
+                  key={index}
+                  label={point.title}
+                  onDelete={() => handleRemovePoint(index)}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </Stack>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12}>
-          <Typography gutterBottom>References</Typography>
-          <Box sx={{ mb: 2 }}>
-            <TextField
-              fullWidth
-              label="Add Reference"
-              value={newReference}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewReference(e.target.value)}
-              onKeyPress={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddReference();
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton onClick={handleAddReference} color="primary">
-                    <AddIcon />
-                  </IconButton>
-                ),
-              }}
-            />
-          </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {references.map((reference, index) => (
-              <Chip
-                key={index}
-                label={reference}
-                onDelete={() => handleRemoveReference(index)}
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </Stack>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Typography gutterBottom>Related Cases</Typography>
-          <Box sx={{ mb: 2 }}>
-            <TextField
-              fullWidth
-              label="Add Related Case"
-              value={newRelatedCase}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewRelatedCase(e.target.value)}
-              onKeyPress={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddRelatedCase();
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton onClick={handleAddRelatedCase} color="primary">
-                    <AddIcon />
-                  </IconButton>
-                ),
-              }}
-            />
-          </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {relatedCases.map((relatedCase, index) => (
-              <Chip
-                key={index}
-                label={relatedCase}
-                onDelete={() => handleRemoveRelatedCase(index)}
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </Stack>
-        </Grid>
-      </Grid>
-    </Box>
+      </Box>
+      <div className="button-group">
+        <button type="button" onClick={prevStep}>Back</button>
+        <button type="submit">Next</button>
+      </div>
+    </form>
   );
-} 
+}; 

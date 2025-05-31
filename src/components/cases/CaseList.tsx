@@ -1,4 +1,23 @@
-import type { Case } from '../../types/case';
+import React, { useState, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  doc,
+  updateDoc,
+  increment,
+  onSnapshot,
+} from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { Case } from '../../types/case';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Search } from 'lucide-react';
+import { CaseCard } from './CaseCard';
 
 export function CaseList() {
   const [cases, setCases] = useState<Case[]>([]);
@@ -25,22 +44,21 @@ export function CaseList() {
           createdAt: doc.data().createdAt.toDate(),
           updatedAt: doc.data().updatedAt.toDate(),
           publishedAt: doc.data().publishedAt?.toDate(),
-          patientAge: doc.data().patientAge || 0,
-          patientGender: doc.data().patientGender || 'other',
+          patientDemographics: {
+            age: doc.data().patientDemographics?.age || 0,
+            gender: doc.data().patientDemographics?.gender || 'other',
+            presentingComplaint: doc.data().patientDemographics?.presentingComplaint || '',
+          },
           clinicalPresentation: doc.data().clinicalPresentation || '',
           imagingFindings: doc.data().imagingFindings || '',
           images: doc.data().images || [],
           authorId: doc.data().authorId || '',
-          authorName: doc.data().authorName || '',
-          authorImage: doc.data().authorImage,
           viewCount: doc.data().viewCount || 0,
           likeCount: doc.data().likeCount || 0,
           commentCount: doc.data().commentCount || 0,
           saveCount: doc.data().saveCount || 0,
-          likes: doc.data().likes || [],
-          saves: doc.data().saves || [],
           tags: doc.data().tags || [],
-          teachingPoints: doc.data().teachingPoints || { keyPoints: [] }
+          teachingPoints: doc.data().teachingPoints || []
         })) as Case[];
         
         setCases(newCases);
@@ -59,7 +77,7 @@ export function CaseList() {
     if (inView && lastDoc && !loading) {
       loadMoreCases();
     }
-  }, [inView]);
+  }, [inView, lastDoc, loading]);
 
   const loadMoreCases = async () => {
     if (!lastDoc) return;
@@ -77,7 +95,24 @@ export function CaseList() {
     const newCases = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt.toDate()
+      createdAt: doc.data().createdAt.toDate(),
+      updatedAt: doc.data().updatedAt.toDate(),
+      publishedAt: doc.data().publishedAt?.toDate(),
+      patientDemographics: {
+        age: doc.data().patientDemographics?.age || 0,
+        gender: doc.data().patientDemographics?.gender || 'other',
+        presentingComplaint: doc.data().patientDemographics?.presentingComplaint || '',
+      },
+      clinicalPresentation: doc.data().clinicalPresentation || '',
+      imagingFindings: doc.data().imagingFindings || '',
+      images: doc.data().images || [],
+      authorId: doc.data().authorId || '',
+      viewCount: doc.data().viewCount || 0,
+      likeCount: doc.data().likeCount || 0,
+      commentCount: doc.data().commentCount || 0,
+      saveCount: doc.data().saveCount || 0,
+      tags: doc.data().tags || [],
+      teachingPoints: doc.data().teachingPoints || []
     })) as Case[];
 
     setCases(prev => [...prev, ...newCases]);

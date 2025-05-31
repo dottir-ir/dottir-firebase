@@ -1,35 +1,86 @@
-import { db } from '../config/firebase';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
+import type { Notification as NotificationType } from '../types/notification';
+import { BaseService } from './BaseService';
+import { ServiceError } from '@/utils/errors';
+
+type NotificationData = {
+  caseId?: string;
+  commentId?: string;
+  userId?: string;
+};
 
 export interface Notification {
   id: string;
   userId: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
   createdAt: Timestamp;
+  type?: 'success' | 'error' | 'info';
+  title: string;
+  data?: NotificationData;
 }
 
-export class NotificationService {
-  private notificationsCollection = collection(db, 'notifications');
+export class NotificationService extends BaseService {
+  private readonly notificationsCollection = collection(db, 'notifications');
 
-  async createNotification(userId: string, message: string, type: 'info' | 'success' | 'warning' | 'error'): Promise<void> {
-    await addDoc(this.notificationsCollection, {
+  async createNotification(
+    userId: string,
+    type: NotificationType['type'],
+    title: string,
+    message: string,
+    data?: NotificationData
+  ): Promise<NotificationType> {
+    const notification = {
       userId,
-      message,
       type,
+      title,
+      message,
       read: false,
-      createdAt: Timestamp.now(),
-    });
+      createdAt: new Date(),
+      data
+    };
+
+    const docRef = await addDoc(this.notificationsCollection, notification);
+    return {
+      id: docRef.id,
+      ...notification
+    } as NotificationType;
   }
 
-  async getUserNotifications(userId: string): Promise<Notification[]> {
-    const q = query(this.notificationsCollection, where('userId', '==', userId));
+  async getNotifications(userId: string): Promise<NotificationType[]> {
+    const q = query(
+      this.notificationsCollection,
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Notification));
+    return this.convertToNotifications(snapshot);
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<void> {
-    await updateDoc(doc(this.notificationsCollection, notificationId), { read: true });
+  async markAsRead(notificationId: string): Promise<void> {
+    const docRef = doc(this.notificationsCollection, notificationId);
+    await updateDoc(docRef, { read: true });
+  }
+
+  private convertToNotifications(snapshot: DocumentData): NotificationType[] {
+    return snapshot.docs.map((doc: DocumentData) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
   }
 }
 

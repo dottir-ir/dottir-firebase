@@ -1,4 +1,9 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { CaseService } from '@/services/CaseService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface LikeButtonProps {
   caseId: string;
@@ -13,27 +18,27 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   initialIsLiked = false,
   onLikeChange,
 }) => {
-  const [likeCount, setLikeCount] = useState(initialLikeCount);
-  const [isLiked, setIsLiked] = useState(initialIsLiked);
-  const [isLoading, setIsLoading] = useState(false);
-  const { currentUser } = useAuth();
+  const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
+  const [isLiked, setIsLiked] = useState<boolean>(initialIsLiked);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user: currentUser } = useAuth();
   const caseService = new CaseService();
 
   useEffect(() => {
     const checkLikeStatus = async () => {
-      if (!currentUser?.uid) return;
+      if (!currentUser?.id) return;
       try {
-        const liked = await caseService.isLiked(caseId, currentUser.uid);
+        const liked = await caseService.isLiked(caseId, currentUser.id);
         setIsLiked(liked);
       } catch (error) {
         console.error('Error checking like status:', error);
       }
     };
     checkLikeStatus();
-  }, [caseId, currentUser?.uid]);
+  }, [caseId, currentUser?.id]);
 
   const handleLike = async () => {
-    if (!currentUser?.uid) {
+    if (!currentUser?.id) {
       toast.error('Please sign in to like cases');
       return;
     }
@@ -41,13 +46,13 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
     setIsLoading(true);
     try {
       if (isLiked) {
-        await caseService.unlikeCase(caseId, currentUser.uid);
-        setLikeCount(prev => prev - 1);
+        await caseService.unlikeCase(caseId, currentUser.id);
+        setLikeCount((prev: number) => prev - 1);
         setIsLiked(false);
         onLikeChange?.(likeCount - 1, false);
       } else {
-        await caseService.likeCase(caseId, currentUser.uid);
-        setLikeCount(prev => prev + 1);
+        await caseService.likeCase(caseId, currentUser.id);
+        setLikeCount((prev: number) => prev + 1);
         setIsLiked(true);
         onLikeChange?.(likeCount + 1, true);
       }

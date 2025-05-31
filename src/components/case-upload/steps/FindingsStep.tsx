@@ -1,4 +1,6 @@
-import type { StepProps } from '../types';
+import React from 'react';
+import type { CaseFormData } from '../../../types/case';
+import type { StepProps, FormError } from '../../../types/form';
 
 export const FindingsStep: React.FC<StepProps> = ({
   formData,
@@ -25,6 +27,14 @@ export const FindingsStep: React.FC<StepProps> = ({
     nextStep();
   };
 
+  const getErrorMessage = (field: string): string | undefined => {
+    const error = errors?.[field];
+    if (error && 'message' in error) {
+      return error.message;
+    }
+    return undefined;
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <h2>Findings and Diagnosis</h2>
@@ -37,8 +47,8 @@ export const FindingsStep: React.FC<StepProps> = ({
           onChange={handleChange}
           required
         />
-        {errors?.imagingFindings && (
-          <span className="error">{errors.imagingFindings.message}</span>
+        {getErrorMessage('imagingFindings') && (
+          <span className="error">{getErrorMessage('imagingFindings')}</span>
         )}
       </div>
       <div className="form-group">
@@ -50,8 +60,8 @@ export const FindingsStep: React.FC<StepProps> = ({
           onChange={handleDifferentialChange}
           required
         />
-        {errors?.differentialDiagnosis && (
-          <span className="error">{errors.differentialDiagnosis.message}</span>
+        {getErrorMessage('differentialDiagnosis') && (
+          <span className="error">{getErrorMessage('differentialDiagnosis')}</span>
         )}
       </div>
       <div className="form-group">
@@ -64,8 +74,8 @@ export const FindingsStep: React.FC<StepProps> = ({
           onChange={handleChange}
           required
         />
-        {errors?.finalDiagnosis && (
-          <span className="error">{errors.finalDiagnosis.message}</span>
+        {getErrorMessage('finalDiagnosis') && (
+          <span className="error">{getErrorMessage('finalDiagnosis')}</span>
         )}
       </div>
       <div className="button-group">

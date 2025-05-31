@@ -1,4 +1,4 @@
-import { db, auth, storage } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { 
   getDoc, setDoc, updateDoc, deleteDoc, 
   collection, doc, query, where, orderBy, 
@@ -12,13 +12,12 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
-  User as FirebaseUser
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import type { UserCredential } from 'firebase/auth';
-import type { User, UserProfile } from '../models/User';
-
-export type UserRole = 'doctor' | 'student' | 'admin';
+import type { UserProfile, UserRole } from '../types/user';
+import { BaseService } from './BaseService';
+import { ServiceError } from '@/utils/errors';
 
 interface RegisterOptions {
   title: string;
@@ -28,7 +27,9 @@ interface RegisterOptions {
   verificationDocuments?: string[];
 }
 
-class AuthService {
+export class AuthService extends BaseService {
+  private readonly usersCollection = collection(db, 'users');
+
   async register(
     email: string,
     password: string,
@@ -59,7 +60,7 @@ class AuthService {
       };
 
       // Create user profile in Firestore
-      await setDoc(doc(db, 'users', user.uid), userProfile);
+      await setDoc(doc(this.usersCollection, user.uid), userProfile);
 
       return userProfile;
     } catch (error) {
@@ -73,7 +74,7 @@ class AuthService {
       const user = userCredential.user;
       
       // Fetch user profile from Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userDoc = await getDoc(doc(this.usersCollection, user.uid));
       if (!userDoc.exists()) {
         throw new Error('User profile not found');
       }
@@ -112,7 +113,7 @@ class AuthService {
     if (!user) return null;
 
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userDoc = await getDoc(doc(this.usersCollection, user.uid));
       if (!userDoc.exists()) return null;
       
       const data = userDoc.data();
@@ -130,7 +131,7 @@ class AuthService {
 
   async uploadDoctorVerification(userId: string, documentUrl: string): Promise<void> {
     try {
-      await setDoc(doc(db, 'users', userId), {
+      await setDoc(doc(this.usersCollection, userId), {
         doctorVerificationDoc: documentUrl,
         doctorVerificationStatus: 'pending',
         updatedAt: new Date(),
@@ -140,9 +141,46 @@ class AuthService {
     }
   }
 
-  private handleError(error: any): Error {
-    console.error('Auth Error:', error);
-    return new Error(error.message || 'An authentication error occurred');
+  async getUserById(userId: string): Promise<UserProfile> {
+    try {
+      const userDoc = await getDoc(doc(this.usersCollection, userId));
+      if (!userDoc.exists()) {
+        throw new ServiceError('User not found', 'not-found');
+      }
+      return { id: userDoc.id, ...userDoc.data() } as UserProfile;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async updateUserProfile(userId: string, profile: Partial<UserProfile>): Promise<void> {
+    try {
+      await updateDoc(doc(this.usersCollection, userId), profile);
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async createUser(userId: string, userData: Partial<UserProfile>): Promise<void> {
+    try {
+      await setDoc(doc(this.usersCollection, userId), userData);
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<UserProfile | null> {
+    try {
+      const q = query(this.usersCollection, where('email', '==', email));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        return null;
+      }
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() } as UserProfile;
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 }
 

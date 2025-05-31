@@ -1,4 +1,9 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Bookmark } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { CaseService } from '@/services/CaseService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SaveButtonProps {
   caseId: string;
@@ -13,27 +18,27 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   initialIsSaved = false,
   onSaveChange,
 }) => {
-  const [saveCount, setSaveCount] = useState(initialSaveCount);
-  const [isSaved, setIsSaved] = useState(initialIsSaved);
-  const [isLoading, setIsLoading] = useState(false);
-  const { currentUser } = useAuth();
+  const [saveCount, setSaveCount] = useState<number>(initialSaveCount);
+  const [isSaved, setIsSaved] = useState<boolean>(initialIsSaved);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user: currentUser } = useAuth();
   const caseService = new CaseService();
 
   useEffect(() => {
     const checkSaveStatus = async () => {
-      if (!currentUser?.uid) return;
+      if (!currentUser?.id) return;
       try {
-        const saved = await caseService.isSaved(caseId, currentUser.uid);
+        const saved = await caseService.isSaved(caseId, currentUser.id);
         setIsSaved(saved);
       } catch (error) {
         console.error('Error checking save status:', error);
       }
     };
     checkSaveStatus();
-  }, [caseId, currentUser?.uid]);
+  }, [caseId, currentUser?.id]);
 
   const handleSave = async () => {
-    if (!currentUser?.uid) {
+    if (!currentUser?.id) {
       toast.error('Please sign in to save cases');
       return;
     }
@@ -41,13 +46,13 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
     setIsLoading(true);
     try {
       if (isSaved) {
-        await caseService.unsaveCase(caseId, currentUser.uid);
-        setSaveCount(prev => prev - 1);
+        await caseService.unsaveCase(caseId, currentUser.id);
+        setSaveCount((prev: number) => prev - 1);
         setIsSaved(false);
         onSaveChange?.(saveCount - 1, false);
       } else {
-        await caseService.saveCase(caseId, currentUser.uid);
-        setSaveCount(prev => prev + 1);
+        await caseService.saveCase(caseId, currentUser.id);
+        setSaveCount((prev: number) => prev + 1);
         setIsSaved(true);
         onSaveChange?.(saveCount + 1, true);
       }

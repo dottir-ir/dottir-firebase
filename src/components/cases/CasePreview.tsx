@@ -1,4 +1,10 @@
+import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { Eye, MessageCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { LikeButton } from '../interactions/LikeButton';
+import { SaveButton } from '../interactions/SaveButton';
+import type { CaseMetadata } from '../../models/Case';
 
 interface CasePreviewProps {
   case: CaseMetadata;

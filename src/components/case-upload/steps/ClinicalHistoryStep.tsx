@@ -1,4 +1,6 @@
+import React from 'react';
 import type { CaseFormData } from '../../../types/case';
+import type { StepProps, FormError } from '../../../types/form';
 
 export const ClinicalHistoryStep: React.FC<StepProps> = ({
   formData,
@@ -29,6 +31,18 @@ export const ClinicalHistoryStep: React.FC<StepProps> = ({
     nextStep();
   };
 
+  const getErrorMessage = (field: string): string | undefined => {
+    const [section, name] = field.split('.');
+    const sectionErrors = errors?.[section];
+    if (!sectionErrors || !('message' in sectionErrors)) {
+      const fieldError = sectionErrors?.[name];
+      if (fieldError && 'message' in fieldError) {
+        return fieldError.message;
+      }
+    }
+    return undefined;
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <h2>Clinical History</h2>
@@ -41,8 +55,8 @@ export const ClinicalHistoryStep: React.FC<StepProps> = ({
           onChange={handleChange}
           required
         />
-        {errors?.clinicalHistory?.presentation && (
-          <span className="error">{errors.clinicalHistory.presentation.message}</span>
+        {getErrorMessage('clinicalHistory.presentation') && (
+          <span className="error">{getErrorMessage('clinicalHistory.presentation')}</span>
         )}
       </div>
       <div className="form-group">
@@ -54,8 +68,8 @@ export const ClinicalHistoryStep: React.FC<StepProps> = ({
           onChange={handleChange}
           required
         />
-        {errors?.clinicalHistory?.history && (
-          <span className="error">{errors.clinicalHistory.history.message}</span>
+        {getErrorMessage('clinicalHistory.history') && (
+          <span className="error">{getErrorMessage('clinicalHistory.history')}</span>
         )}
       </div>
       <div className="button-group">

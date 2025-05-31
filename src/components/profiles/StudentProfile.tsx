@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -10,6 +11,8 @@ import {
   ListItemText,
   Chip,
 } from '@mui/material';
+import { UserProfile } from './UserProfile';
+import type { User } from '../../models/User';
 
 interface StudentProfileProps {
   user: User;

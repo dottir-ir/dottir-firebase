@@ -1,3 +1,7 @@
+import { initializeApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 // Your web app's Firebase configuration

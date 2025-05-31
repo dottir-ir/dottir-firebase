@@ -1,94 +1,64 @@
-import { Button } from './Button';
+import React from 'react';
+import {
+  useForm,
+  Controller,
+  FieldValues,
+  SubmitHandler,
+  UseFormProps,
+} from 'react-hook-form';
+import { Box, Button } from '@mui/material';
 
-interface FormField {
-  name: string;
-  label: string;
-  type?: string;
-  placeholder?: string;
-  validation?: {
-    required?: boolean | string;
-    minLength?: { value: number; message: string };
-    maxLength?: { value: number; message: string };
-    pattern?: { value: RegExp; message: string };
-    validate?: (value: any) => boolean | string;
-  };
-  options?: { label: string; value: string }[];
-}
-
-interface FormProps<T extends FieldValues> {
-  fields: FormField[];
+interface FormProps<T extends FieldValues> extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
   onSubmit: SubmitHandler<T>;
+  defaultValues?: UseFormProps<T>['defaultValues'];
   submitLabel?: string;
-  defaultValues?: DefaultValues<T>;
-  formOptions?: Omit<UseFormProps<T>, 'defaultValues'>;
-  className?: string;
+  children: React.ReactNode;
 }
 
 export function Form<T extends FieldValues>({
-  fields,
   onSubmit,
-  submitLabel = 'Submit',
   defaultValues,
-  formOptions,
-  className = '',
+  submitLabel = 'Submit',
+  children,
+  ...props
 }: FormProps<T>) {
-  const { theme } = useTheme();
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<T>({
+  const { control, handleSubmit } = useForm<T>({
     defaultValues,
-    ...formOptions,
   });
 
   return (
-    <form
+    <Box
+      component="form"
       onSubmit={handleSubmit(onSubmit)}
-      className={`space-y-6 ${className}`}
+      {...props}
     >
-      {fields.map((field) => (
-        <div key={field.name} className="space-y-2">
-          <label htmlFor={field.name} className="text-sm font-medium">
-            {field.label}
-          </label>
-          <Controller
-            name={field.name as any}
-            control={control}
-            rules={field.validation}
-            render={({ field: { onChange, value, ref } }) => (
-              <Input
-                id={field.name}
-                type={field.type || 'text'}
-                placeholder={field.placeholder}
-                value={value}
-                onChange={onChange}
-                ref={ref}
-                aria-invalid={!!errors[field.name]}
-                aria-describedby={errors[field.name] ? `${field.name}-error` : undefined}
-              />
-            )}
-          />
-          {errors[field.name] && (
-            <p id={`${field.name}-error`} className="text-sm text-red-500">
-              {errors[field.name]?.message as string}
-            </p>
-          )}
-        </div>
-      ))}
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child) && child.props.name) {
+          return (
+            <Controller
+              name={child.props.name}
+              control={control}
+              render={({ field }) =>
+                React.cloneElement(child, {
+                  ...field,
+                  ...child.props,
+                })
+              }
+            />
+          );
+        }
+        return child;
+      })}
       <Button
         type="submit"
-        disabled={isSubmitting}
-        className={`
-          bg-${theme.colors.primary}
-          text-white
-          hover:bg-opacity-90
-          w-full
-        `}
+        variant="contained"
+        color="primary"
+        fullWidth
+        sx={{ mt: 2 }}
       >
         {submitLabel}
       </Button>
-    </form>
+    </Box>
   );
 }
 

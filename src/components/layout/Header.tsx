@@ -1,30 +1,41 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Badge,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { useAuth } from '../../contexts/AuthContext';
 import { NotificationBanner } from '../notifications/NotificationBanner';
+import { Notification } from '../../types/notification';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  notifications: Notification[];
+  onMarkAsRead: (id: string) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ notifications, onMarkAsRead }) => {
   const { currentUser } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [bannerNotifications, setBannerNotifications] = useState<Notification[]>([]);
-
-  useEffect(() => {
-    if (currentUser) {
-      notificationService.getUserNotifications(currentUser.id).then((notifs) => {
-        setNotifications(notifs);
-        setBannerNotifications(notifs.filter((n) => !n.read));
-      });
-    }
-  }, [currentUser]);
 
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleMarkAsRead = async (id: string) => {
-    await notificationService.markNotificationAsRead(id);
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+
+  const handleMarkAsRead = (id: string) => {
+    onMarkAsRead(id);
     setBannerNotifications((prev) => prev.filter((n) => n.id !== id));
+    handleClose();
   };
 
   return (
@@ -32,7 +43,9 @@ export const Header: React.FC = () => {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Dottir
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Dottir
+            </Link>
           </Typography>
           {currentUser && (
             <>
@@ -45,21 +58,26 @@ export const Header: React.FC = () => {
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                PaperProps={{
+                  style: {
+                    maxHeight: 300,
+                    width: 300,
+                  },
+                }}
               >
-                {notifications.length === 0 && (
+                {notifications.length === 0 ? (
                   <MenuItem disabled>No notifications</MenuItem>
+                ) : (
+                  notifications.map((notif) => (
+                    <MenuItem
+                      key={notif.id}
+                      onClick={() => handleMarkAsRead(notif.id)}
+                      selected={!notif.read}
+                    >
+                      {notif.message}
+                    </MenuItem>
+                  ))
                 )}
-                {notifications.map((notif) => (
-                  <MenuItem
-                    key={notif.id}
-                    onClick={() => handleMarkAsRead(notif.id)}
-                    selected={!notif.read}
-                  >
-                    {notif.message}
-                  </MenuItem>
-                ))}
               </Menu>
             </>
           )}

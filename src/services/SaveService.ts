@@ -1,3 +1,4 @@
+import { db } from '@/lib/firebase';
 import {
   collection,
   doc,
@@ -8,10 +9,12 @@ import {
   query,
   where,
   orderBy,
-  DocumentData,
   increment,
   updateDoc,
 } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
+import type { CaseMetadata } from '../types/case';
+import { BaseService } from './BaseService';
 import { CaseService } from './CaseService';
 
 interface Save {

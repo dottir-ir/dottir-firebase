@@ -1,41 +1,59 @@
 import type { User as FirebaseUser } from 'firebase/auth';
 
-export type UserRole = 'doctor' | 'student' | 'admin';
+export type UserRole = 'patient' | 'doctor' | 'admin' | 'student';
 
 export interface User {
   id: string;
+  uid: string;
   email: string;
   displayName: string;
   photoURL?: string;
   role: UserRole;
-  title: string;
+  title?: string;
   specialization?: string;
   institution?: string;
   bio?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  lastLoginAt: Date;
-  doctorVerificationStatus?: 'pending' | 'verified' | 'rejected';
+  experience?: string;
+  areasOfInterest?: string[];
   verificationDocuments?: string[];
-  // Student-specific fields
   medicalSchool?: string;
   yearOfStudy?: number;
-  areasOfInterest?: string[];
+  doctorVerificationStatus?: 'pending' | 'verified' | 'rejected';
+  rejectionReason?: string;
+  lastLoginAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  // Optional profile fields
+  phoneNumber?: string;
+  location?: string;
+  website?: string;
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+  };
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  displayName: string;
-  role: UserRole;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
-  lastLoginAt: Date;
-  doctorVerificationStatus?: 'pending' | 'verified' | 'rejected';
-  medicalSchool?: string;
-  yearOfStudy?: number;
-  areasOfInterest?: string[];
-  verificationDocuments?: string[];
-  rejectionReason?: string;
+export interface UserProfile extends Omit<User, 'email'> {
+  email?: string;
+}
+
+// Type guard to check if a user is a doctor
+export function isDoctor(user: User): boolean {
+  return user.role === 'doctor';
+}
+
+// Type guard to check if a user is a student
+export function isStudent(user: User): boolean {
+  return user.role === 'student';
+}
+
+// Type guard to check if a user is an admin
+export function isAdmin(user: User): boolean {
+  return user.role === 'admin';
+}
+
+// Type guard to check if a user is a patient
+export function isPatient(user: User): boolean {
+  return user.role === 'patient';
 } 
