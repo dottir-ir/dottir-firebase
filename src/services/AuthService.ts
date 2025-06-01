@@ -1,9 +1,8 @@
 import { db, auth } from '@/lib/firebase';
 import { 
-  getDoc, setDoc, updateDoc, deleteDoc, 
-  collection, doc, query, where, orderBy, 
-  limit, startAfter, getDocs, onSnapshot,
-  serverTimestamp, Timestamp 
+  getDoc, setDoc, updateDoc, 
+  collection, doc, query, where, 
+  getDocs
 } from 'firebase/firestore';
 import { 
   ref, uploadBytes, getDownloadURL, deleteObject 
@@ -42,7 +41,7 @@ export class AuthService extends BaseService {
       const user = userCredential.user;
 
       const userProfile: UserProfile = {
-        id: user.uid,
+        uid: user.uid,
         email,
         displayName: displayName || '',
         role,
@@ -81,12 +80,30 @@ export class AuthService extends BaseService {
 
       const data = userDoc.data();
       return {
-        ...data,
-        id: user.uid,
-        createdAt: data.createdAt?.toDate(),
-        updatedAt: data.updatedAt?.toDate(),
-        lastLoginAt: data.lastLoginAt?.toDate(),
-      } as UserProfile;
+        uid: user.uid,
+        email: user.email!,
+        displayName: user.displayName || '',
+        role: data.role || 'patient',
+        photoURL: user.photoURL || undefined,
+        title: data.title,
+        specialization: data.specialization,
+        institution: data.institution,
+        bio: data.bio,
+        experience: data.experience,
+        areasOfInterest: data.areasOfInterest,
+        verificationDocuments: data.verificationDocuments,
+        medicalSchool: data.medicalSchool,
+        yearOfStudy: data.yearOfStudy,
+        doctorVerificationStatus: data.doctorVerificationStatus,
+        rejectionReason: data.rejectionReason,
+        lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        phoneNumber: data.phoneNumber,
+        location: data.location,
+        website: data.website,
+        socialLinks: data.socialLinks
+      };
     } catch (error) {
       throw this.handleError(error);
     }
@@ -118,12 +135,30 @@ export class AuthService extends BaseService {
       
       const data = userDoc.data();
       return {
-        ...data,
-        id: user.uid,
-        createdAt: data.createdAt?.toDate(),
-        updatedAt: data.updatedAt?.toDate(),
-        lastLoginAt: data.lastLoginAt?.toDate(),
-      } as UserProfile;
+        uid: user.uid,
+        email: user.email!,
+        displayName: user.displayName || '',
+        role: data.role || 'patient',
+        photoURL: user.photoURL || undefined,
+        title: data.title,
+        specialization: data.specialization,
+        institution: data.institution,
+        bio: data.bio,
+        experience: data.experience,
+        areasOfInterest: data.areasOfInterest,
+        verificationDocuments: data.verificationDocuments,
+        medicalSchool: data.medicalSchool,
+        yearOfStudy: data.yearOfStudy,
+        doctorVerificationStatus: data.doctorVerificationStatus,
+        rejectionReason: data.rejectionReason,
+        lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        phoneNumber: data.phoneNumber,
+        location: data.location,
+        website: data.website,
+        socialLinks: data.socialLinks
+      };
     } catch (error) {
       throw this.handleError(error);
     }
@@ -147,7 +182,32 @@ export class AuthService extends BaseService {
       if (!userDoc.exists()) {
         throw new ServiceError('User not found', 'not-found');
       }
-      return { id: userDoc.id, ...userDoc.data() } as UserProfile;
+      const data = userDoc.data();
+      return {
+        uid: userId,
+        email: data.email,
+        displayName: data.displayName,
+        role: data.role,
+        photoURL: data.photoURL,
+        title: data.title,
+        specialization: data.specialization,
+        institution: data.institution,
+        bio: data.bio,
+        experience: data.experience,
+        areasOfInterest: data.areasOfInterest,
+        verificationDocuments: data.verificationDocuments,
+        medicalSchool: data.medicalSchool,
+        yearOfStudy: data.yearOfStudy,
+        doctorVerificationStatus: data.doctorVerificationStatus,
+        rejectionReason: data.rejectionReason,
+        lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        phoneNumber: data.phoneNumber,
+        location: data.location,
+        website: data.website,
+        socialLinks: data.socialLinks
+      };
     } catch (error) {
       return this.handleError(error);
     }
@@ -177,7 +237,32 @@ export class AuthService extends BaseService {
         return null;
       }
       const doc = snapshot.docs[0];
-      return { id: doc.id, ...doc.data() } as UserProfile;
+      const data = doc.data();
+      return {
+        uid: doc.id,
+        email: data.email,
+        displayName: data.displayName,
+        role: data.role,
+        photoURL: data.photoURL,
+        title: data.title,
+        specialization: data.specialization,
+        institution: data.institution,
+        bio: data.bio,
+        experience: data.experience,
+        areasOfInterest: data.areasOfInterest,
+        verificationDocuments: data.verificationDocuments,
+        medicalSchool: data.medicalSchool,
+        yearOfStudy: data.yearOfStudy,
+        doctorVerificationStatus: data.doctorVerificationStatus,
+        rejectionReason: data.rejectionReason,
+        lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        phoneNumber: data.phoneNumber,
+        location: data.location,
+        website: data.website,
+        socialLinks: data.socialLinks
+      };
     } catch (error) {
       return this.handleError(error);
     }

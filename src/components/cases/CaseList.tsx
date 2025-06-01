@@ -12,7 +12,7 @@ import {
   increment,
   onSnapshot,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../lib/firebase';
 import { Case } from '../../types/case';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';

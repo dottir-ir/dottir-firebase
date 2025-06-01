@@ -1,3 +1,11 @@
+import React, { useState, useEffect } from 'react';
+import { Timestamp, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { useAuth } from '../../contexts/AuthContext';
+import { Button } from '../ui/Button';
+import { Textarea } from '../ui/Textarea';
+import { Avatar, AvatarImage, AvatarFallback } from '../ui/Avatar';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -146,11 +154,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ caseId }) => {
               <>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar
-                      src={comment.authorImage}
-                      alt={comment.authorName}
-                      fallback={comment.authorName.charAt(0).toUpperCase()}
-                    />
+                    <Avatar>
+                      {comment.authorImage ? (
+                        <AvatarImage
+                          src={comment.authorImage}
+                          alt={comment.authorName}
+                        />
+                      ) : (
+                        <AvatarFallback>
+                          {comment.authorName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
                     <div>
                       <p className="font-medium">{comment.authorName}</p>
                       <p className="text-sm text-gray-500">

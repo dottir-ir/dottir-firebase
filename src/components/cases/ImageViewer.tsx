@@ -1,4 +1,7 @@
+import React from 'react';
 import { Button } from '../ui/Button';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 interface Image {
   url: string;
@@ -9,6 +12,12 @@ interface ImageViewerProps {
   images: Image[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
+}
+
+interface TransformWrapperProps {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetTransform: () => void;
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({
@@ -32,7 +41,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         maxScale={4}
         centerOnInit
       >
-        {({ zoomIn, zoomOut, resetTransform }) => (
+        {({ zoomIn, zoomOut, resetTransform }: TransformWrapperProps) => (
           <>
             <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
               <TransformComponent>

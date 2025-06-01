@@ -1,21 +1,24 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, error, clearError } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
-      clearError();
-      await signIn(email, password);
+      setError(null);
+      await login(email, password);
       navigate('/dashboard');
-    } catch (error) {
-      // Error is handled by the auth context
+    } catch (err) {
+      setError('Failed to sign in. Please check your credentials.');
     } finally {
       setLoading(false);
     }

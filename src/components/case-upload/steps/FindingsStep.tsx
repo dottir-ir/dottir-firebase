@@ -30,7 +30,7 @@ export const FindingsStep: React.FC<StepProps> = ({
   const getErrorMessage = (field: string): string | undefined => {
     const error = errors?.[field];
     if (error && 'message' in error) {
-      return error.message;
+      return (error as FormError).message;
     }
     return undefined;
   };

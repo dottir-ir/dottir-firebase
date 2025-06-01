@@ -31,7 +31,7 @@ export const Sidebar: React.FC = () => {
     {
       text: 'Profile',
       icon: <PersonIcon />,
-      path: `/profile/${currentUser?.id}`,
+      path: `/profile/${currentUser?.uid}`,
       roles: ['patient', 'doctor', 'admin'],
     },
     {

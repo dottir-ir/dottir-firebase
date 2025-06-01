@@ -12,7 +12,7 @@ export const Header = () => {
     const [bannerNotifications, setBannerNotifications] = useState([]);
     useEffect(() => {
         if (currentUser) {
-            notificationService.getUserNotifications(currentUser.id).then((notifs) => {
+            notificationService.getUserNotifications(currentUser.uid).then((notifs) => {
                 setNotifications(notifs);
                 setBannerNotifications(notifs.filter((n) => !n.read));
             });

@@ -6,6 +6,7 @@ export interface Case {
   description: string;
   authorId: string;
   authorImage?: string;
+  authorName?: string;
   status: 'draft' | 'published' | 'archived';
   tags: string[];
   category: string;
@@ -17,6 +18,8 @@ export interface Case {
   likeCount: number;
   commentCount: number;
   saveCount: number;
+  likes: string[];
+  saves: string[];
   clinicalHistory: string;
   clinicalPresentation: string;
   imagingFindings: string;
@@ -154,7 +157,11 @@ export interface CaseFormData {
     presentation: string;
     history: string;
   };
-  images: string[];
+  images: {
+    url: string;
+    description: string;
+    order: number;
+  }[];
   imagingFindings: string;
   differentialDiagnosis: string[];
   finalDiagnosis: string;

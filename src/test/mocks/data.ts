@@ -1,9 +1,8 @@
-import { User } from '../../types/user';
-import { Case } from '../../types/case';
-import { Comment } from '../../types/comment';
+import type { User } from '../../types/user';
+import type { Case } from '../../types/case';
+import type { Comment } from '../../types/comment';
 
 export const mockUser: User = {
-  id: 'user1',
   uid: 'user1',
   email: 'test@example.com',
   displayName: 'Test User',
@@ -20,12 +19,12 @@ export const mockUser: User = {
 
 export const mockCase: Case = {
   id: 'case1',
-  title: 'Interesting Case Study',
-  description: 'A detailed case study of a rare condition',
+  title: 'Test Case',
+  description: 'A test case',
   authorId: 'user1',
   status: 'published',
-  tags: ['cardiology', 'radiology'],
-  category: 'cardiology',
+  tags: ['test', 'example'],
+  category: 'radiology',
   difficulty: 'beginner',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -33,27 +32,23 @@ export const mockCase: Case = {
   likeCount: 0,
   commentCount: 0,
   saveCount: 0,
-  clinicalHistory: 'Patient presented with chest pain',
-  clinicalPresentation: 'Acute onset of chest pain',
-  imagingFindings: 'Chest X-ray shows...',
-  differentialDiagnosis: ['Myocardial Infarction', 'Pulmonary Embolism'],
-  finalDiagnosis: 'Acute Coronary Syndrome',
+  likes: [],
+  saves: [],
+  clinicalHistory: 'Test clinical history',
+  clinicalPresentation: 'Test clinical presentation',
+  imagingFindings: 'Test imaging findings',
+  differentialDiagnosis: ['Test diagnosis 1', 'Test diagnosis 2'],
+  finalDiagnosis: 'Test final diagnosis',
   patientDemographics: {
-    age: 45,
+    age: 30,
     gender: 'male',
-    presentingComplaint: 'Chest pain'
+    presentingComplaint: 'Test complaint'
   },
-  images: [
-    {
-      url: 'https://example.com/image1.jpg',
-      description: 'Chest X-ray',
-      order: 1
-    }
-  ],
+  images: [],
   teachingPoints: [
     {
-      title: 'Key Learning Point',
-      description: 'Important teaching point about this case',
+      title: 'Test teaching point',
+      description: 'Test description',
       order: 1
     }
   ]

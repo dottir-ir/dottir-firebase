@@ -1,63 +1,102 @@
 import React from 'react';
-import {
-  useForm,
-  Controller,
-  FieldValues,
-  SubmitHandler,
-  UseFormProps,
-} from 'react-hook-form';
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
+import { useForm, Controller, type FieldValues, type FieldErrors, type SubmitHandler, type Path, type UseFormProps, type DefaultValues } from 'react-hook-form';
 
-interface FormProps<T extends FieldValues> extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
-  onSubmit: SubmitHandler<T>;
-  defaultValues?: UseFormProps<T>['defaultValues'];
-  submitLabel?: string;
-  children: React.ReactNode;
+export type ErrorMessage = string | { message?: string } | undefined;
+
+export interface Field<T extends FieldValues> {
+  name: Path<T>;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  validation?: {
+    required?: boolean | string;
+    min?: number | { value: number; message: string };
+    max?: number | { value: number; message: string };
+    minLength?: number | { value: number; message: string };
+    maxLength?: number | { value: number; message: string };
+    pattern?: { value: RegExp; message: string };
+    validate?: (value: any) => boolean | string;
+  };
 }
 
+export interface FormProps<T extends FieldValues> {
+  fields: Field<T>[];
+  onSubmit: SubmitHandler<T>;
+  submitLabel?: string;
+  defaultValues?: DefaultValues<T>;
+  formOptions?: Omit<UseFormProps<T>, 'defaultValues'>;
+  className?: string;
+  [key: string]: any;
+}
+
+const getErrorMessage = (error: ErrorMessage): string => {
+  if (typeof error === 'string') return error;
+  if (error?.message) return error.message;
+  return 'Invalid input';
+};
+
 export function Form<T extends FieldValues>({
+  fields,
   onSubmit,
-  defaultValues,
   submitLabel = 'Submit',
-  children,
+  defaultValues,
+  formOptions,
+  className = '',
   ...props
 }: FormProps<T>) {
-  const { control, handleSubmit } = useForm<T>({
+  const methods = useForm<T>({
     defaultValues,
+    ...formOptions,
   });
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = methods;
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit(onSubmit)}
+      className={className}
       {...props}
     >
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child) && child.props.name) {
-          return (
-            <Controller
-              name={child.props.name}
-              control={control}
-              render={({ field }) =>
-                React.cloneElement(child, {
-                  ...field,
-                  ...child.props,
-                })
-              }
-            />
-          );
-        }
-        return child;
-      })}
-      <Button
+      {fields.map((field) => (
+        <Box key={String(field.name)} sx={{ mb: 2 }}>
+          <Box sx={{ mb: 1 }}>
+            <label htmlFor={field.name} className="text-sm font-medium">
+              {field.label}
+            </label>
+          </Box>
+          <Controller
+            name={field.name}
+            control={control}
+            rules={field.validation}
+            render={({ field: { onChange, value, ref } }) => (
+              <input
+                id={field.name}
+                type={field.type || 'text'}
+                placeholder={field.placeholder}
+                value={value}
+                onChange={onChange}
+                ref={ref}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-invalid={!!errors[field.name]}
+                aria-describedby={errors[field.name] ? `${field.name}-error` : undefined}
+              />
+            )}
+          />
+          {errors[field.name] && (
+            <Box sx={{ fontSize: '12px', color: 'red' }} id={`${field.name}-error`}>
+              {getErrorMessage(errors[field.name] as ErrorMessage)}
+            </Box>
+          )}
+        </Box>
+      ))}
+      <button
         type="submit"
-        variant="contained"
-        color="primary"
-        fullWidth
-        sx={{ mt: 2 }}
+        disabled={isSubmitting}
+        className="w-full px-4 py-2 text-white bg-primary rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
       >
-        {submitLabel}
-      </Button>
+        {isSubmitting ? 'Submitting...' : submitLabel}
+      </button>
     </Box>
   );
 }

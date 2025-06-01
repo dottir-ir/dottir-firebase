@@ -8,7 +8,7 @@ import {
   updateDoc,
   deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../lib/firebase';
 import {
   Box,
   Typography,
@@ -119,4 +119,6 @@ export const ContentModeration: React.FC = () => {
       </Grid>
     </Box>
   );
-}; 
+};
+
+export default ContentModeration; 

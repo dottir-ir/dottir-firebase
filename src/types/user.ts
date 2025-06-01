@@ -3,7 +3,6 @@ import type { User as FirebaseUser } from 'firebase/auth';
 export type UserRole = 'patient' | 'doctor' | 'admin' | 'student';
 
 export interface User {
-  id: string;
   uid: string;
   email: string;
   displayName: string;
@@ -34,9 +33,8 @@ export interface User {
   };
 }
 
-export interface UserProfile extends Omit<User, 'email'> {
-  email?: string;
-}
+// For backward compatibility
+export type UserProfile = User;
 
 // Type guard to check if a user is a doctor
 export function isDoctor(user: User): boolean {

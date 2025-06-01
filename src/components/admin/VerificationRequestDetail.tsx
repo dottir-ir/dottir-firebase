@@ -1,6 +1,15 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { VerificationService } from '../../services/VerificationService';
+import type { VerificationRequestWithUser } from '../../types/verification';
+import { format } from 'date-fns';
 import { useAuth } from '../../contexts/AuthContext';
 
-export const VerificationRequestDetail: React.FC = () => {
+interface VerificationRequestDetailProps {
+  onStatusChange?: (status: string) => void;
+}
+
+export const VerificationRequestDetail: React.FC<VerificationRequestDetailProps> = ({ onStatusChange = () => {} }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -9,6 +18,7 @@ export const VerificationRequestDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const verificationService = new VerificationService();
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -23,7 +33,6 @@ export const VerificationRequestDetail: React.FC = () => {
         setLoading(false);
       }
     };
-
     loadRequest();
   }, [id]);
 
@@ -31,11 +40,10 @@ export const VerificationRequestDetail: React.FC = () => {
     if (!id || !currentUser) return;
     setIsSubmitting(true);
     try {
-      await verificationService.approveVerificationRequest(id, currentUser.id);
-      navigate('/admin/verification');
-    } catch (err) {
-      setError('Failed to approve request');
-      console.error(err);
+      await verificationService.approveVerificationRequest(id, currentUser.uid);
+      onStatusChange('approved');
+    } catch (error) {
+      console.error('Error approving verification request:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -45,11 +53,10 @@ export const VerificationRequestDetail: React.FC = () => {
     if (!id || !currentUser || !rejectionReason) return;
     setIsSubmitting(true);
     try {
-      await verificationService.rejectVerificationRequest(id, currentUser.id, rejectionReason);
-      navigate('/admin/verification');
-    } catch (err) {
-      setError('Failed to reject request');
-      console.error(err);
+      await verificationService.rejectVerificationRequest(id, currentUser.uid, rejectionReason);
+      onStatusChange('rejected');
+    } catch (error) {
+      console.error('Error rejecting verification request:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -100,9 +107,9 @@ export const VerificationRequestDetail: React.FC = () => {
           <div>
             <h2 className="text-lg font-semibold mb-2">Request Details</h2>
             <div className="space-y-2">
-              <p><span className="font-medium">Submitted:</span> {format(request.submittedAt.toDate(), 'MMM d, yyyy')}</p>
+              <p><span className="font-medium">Submitted:</span> {format(request.submittedAt instanceof Date ? request.submittedAt : new Date(request.submittedAt), 'MMM d, yyyy')}</p>
               {request.reviewedAt && (
-                <p><span className="font-medium">Reviewed:</span> {format(request.reviewedAt.toDate(), 'MMM d, yyyy')}</p>
+                <p><span className="font-medium">Reviewed:</span> {format(request.reviewedAt instanceof Date ? request.reviewedAt : new Date(request.reviewedAt), 'MMM d, yyyy')}</p>
               )}
               {request.rejectionReason && (
                 <p><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>
@@ -114,7 +121,7 @@ export const VerificationRequestDetail: React.FC = () => {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2">Verification Documents</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {request.documents.map((doc, index) => (
+            {request.documents.map((doc: string, index: number) => (
               <div key={index} className="border rounded-lg p-4">
                 <a
                   href={doc}

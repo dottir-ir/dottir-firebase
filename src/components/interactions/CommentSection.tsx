@@ -45,7 +45,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser?.id) {
+    if (!currentUser?.uid) {
       toast.error('Please sign in to comment');
       return;
     }
@@ -57,7 +57,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
     setIsSubmitting(true);
     try {
-      await caseService.addComment(caseId, currentUser.id, newComment.trim());
+      await caseService.addComment(caseId, currentUser.uid, newComment.trim());
       setNewComment('');
       await loadComments();
       onCommentChange?.(comments.length + 1);
@@ -109,7 +109,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       {formatDistanceToNow(comment.createdAt, { addSuffix: true })}
                     </p>
                   </div>
-                  {currentUser?.id === comment.authorId && (
+                  {currentUser?.uid === comment.authorId && (
                     <Button
                       variant="ghost"
                       size="sm"

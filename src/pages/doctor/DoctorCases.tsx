@@ -51,15 +51,17 @@ export const DoctorCasesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('recent');
 
   useEffect(() => {
-    loadCases();
-  }, [currentUser?.id]);
+    if (currentUser?.uid) {
+      loadCases();
+    }
+  }, [currentUser?.uid]);
 
   const loadCases = async () => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.uid) return;
     
     try {
       setLoading(true);
-      const doctorCases = await caseService.getDoctorCases(currentUser.id);
+      const doctorCases = await caseService.getDoctorCases(currentUser.uid);
       setCases(doctorCases);
     } catch (error) {
       toast.error('Failed to load cases');

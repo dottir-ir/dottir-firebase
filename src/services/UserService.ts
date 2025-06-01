@@ -26,7 +26,7 @@ export class UserService extends BaseService {
       if (!userDoc.exists()) {
         throw new ServiceError('User not found', 'not-found');
       }
-      return { id: userDoc.id, ...userDoc.data() } as User;
+      return { uid: userDoc.id, ...userDoc.data() } as User;
     } catch (error) {
       return this.handleError(error);
     }
@@ -56,7 +56,7 @@ export class UserService extends BaseService {
         return null;
       }
       const doc = snapshot.docs[0];
-      return { id: doc.id, ...doc.data() } as User;
+      return { uid: doc.id, ...doc.data() } as User;
     } catch (error) {
       return this.handleError(error);
     }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Button, Paper, Alert } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
-import { CaseFormData } from '../../types/case';
+import type { CaseFormData } from '../../types/case';
+import type { StepProps } from '../../types/form';
 import { PatientDemographicsStep } from './steps/PatientDemographicsStep';
 import { ClinicalHistoryStep } from './steps/ClinicalHistoryStep';
 import { FindingsStep } from './steps/FindingsStep';
@@ -82,38 +83,40 @@ const CaseUploadForm: React.FC = () => {
   };
 
   const renderStepContent = (step: number) => {
+    const stepProps: StepProps = {
+      formData,
+      updateFormData,
+      nextStep: handleNext,
+      prevStep: handleBack,
+      isSubmitting
+    };
+
     switch (step) {
       case 0:
         return <PatientDemographicsStep
           key="demographics"
-          formData={formData}
-          updateFormData={updateFormData}
-          nextStep={handleNext}
-          prevStep={handleBack}
-          isSubmitting={isSubmitting}
+          {...stepProps}
         />;
       case 1:
         return <ClinicalHistoryStep
           key="clinical"
-          formData={formData}
-          updateFormData={updateFormData}
-          nextStep={handleNext}
-          prevStep={handleBack}
-          isSubmitting={isSubmitting}
+          {...stepProps}
         />;
       case 2:
         return <FindingsStep
           key="findings"
-          formData={formData}
-          updateFormData={updateFormData}
-          nextStep={handleNext}
-          prevStep={handleBack}
-          isSubmitting={isSubmitting}
+          {...stepProps}
         />;
       case 3:
-        return <TeachingPointsStep />;
+        return <TeachingPointsStep
+          key="teaching"
+          {...stepProps}
+        />;
       case 4:
-        return <TagsStep />;
+        return <TagsStep
+          key="tags"
+          {...stepProps}
+        />;
       default:
         return null;
     }

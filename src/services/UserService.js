@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc, DocumentData, } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { BaseService, ServiceError } from './BaseService';
+import { BaseService } from './BaseService';
+import { ServiceError } from '@/utils/errors';
 import { Case, CaseMetadata } from '../types/case';
 export class UserService extends BaseService {
     constructor() {

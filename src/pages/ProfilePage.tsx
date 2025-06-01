@@ -10,7 +10,7 @@ import { Edit as EditIcon } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CaseService } from '@/services/CaseService';
 import { UserService } from '@/services/UserService';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import type { User } from '../types/user';
 import type { CaseMetadata } from '../types/case';
 import { EditProfile } from '../components/profiles/EditProfile';
@@ -34,7 +34,7 @@ interface LearningMetrics {
 
 export const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
-  const { user: currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const userService = new UserService();
   const caseService = new CaseService();
@@ -51,7 +51,7 @@ export const ProfilePage = () => {
     lastActive: new Date(),
   });
 
-  const isOwnProfile = currentUser?.id === userId;
+  const isOwnProfile = currentUser?.uid === userId;
 
   useEffect(() => {
     const fetchUserData = async () => {

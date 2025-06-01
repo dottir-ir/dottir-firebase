@@ -59,20 +59,30 @@ export class VerificationService extends BaseService {
       const snapshot = await getDocs(q);
       const requests = await Promise.all(
         snapshot.docs.map(async (doc) => {
-          const data = doc.data() as DocumentData;
+          const data = doc.data();
           const user = await this.userService.getUserById(data.userId);
           return {
             id: doc.id,
-            ...data,
+            userId: data.userId,
+            status: data.status || 'pending',
+            documents: data.documents || [],
+            submittedAt: data.submittedAt?.toDate() || new Date(),
+            reviewedAt: data.reviewedAt?.toDate(),
+            reviewedBy: data.reviewedBy,
+            rejectionReason: data.rejectionReason,
             user: {
-              id: user.id,
-              displayName: user.displayName,
+              uid: user.uid,
               email: user.email,
+              displayName: user.displayName,
+              role: user.role,
               title: user.title,
               specialization: user.specialization,
               institution: user.institution,
-            },
-          } as VerificationRequestWithUser;
+              createdAt: user.createdAt,
+              updatedAt: user.updatedAt,
+              lastLoginAt: user.lastLoginAt
+            }
+          };
         })
       );
       return requests;
@@ -90,21 +100,31 @@ export class VerificationService extends BaseService {
         throw new Error('Verification request not found');
       }
 
-      const data = docSnap.data() as DocumentData;
+      const data = docSnap.data();
       const user = await this.userService.getUserById(data.userId);
       
       return {
         id: docSnap.id,
-        ...data,
+        userId: data.userId,
+        status: data.status || 'pending',
+        documents: data.documents || [],
+        submittedAt: data.submittedAt?.toDate() || new Date(),
+        reviewedAt: data.reviewedAt?.toDate(),
+        reviewedBy: data.reviewedBy,
+        rejectionReason: data.rejectionReason,
         user: {
-          id: user.id,
-          displayName: user.displayName,
+          uid: user.uid,
           email: user.email,
+          displayName: user.displayName,
+          role: user.role,
           title: user.title,
           specialization: user.specialization,
           institution: user.institution,
-        },
-      } as VerificationRequestWithUser;
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          lastLoginAt: user.lastLoginAt
+        }
+      };
     } catch (error) {
       return this.handleError(error);
     }

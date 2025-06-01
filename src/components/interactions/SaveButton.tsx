@@ -26,19 +26,19 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
 
   useEffect(() => {
     const checkSaveStatus = async () => {
-      if (!currentUser?.id) return;
+      if (!currentUser?.uid) return;
       try {
-        const saved = await caseService.isSaved(caseId, currentUser.id);
+        const saved = await caseService.isSaved(caseId, currentUser.uid);
         setIsSaved(saved);
       } catch (error) {
         console.error('Error checking save status:', error);
       }
     };
     checkSaveStatus();
-  }, [caseId, currentUser?.id]);
+  }, [caseId, currentUser?.uid]);
 
   const handleSave = async () => {
-    if (!currentUser?.id) {
+    if (!currentUser?.uid) {
       toast.error('Please sign in to save cases');
       return;
     }
@@ -46,12 +46,12 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
     setIsLoading(true);
     try {
       if (isSaved) {
-        await caseService.unsaveCase(caseId, currentUser.id);
+        await caseService.unsaveCase(caseId, currentUser.uid);
         setSaveCount((prev: number) => prev - 1);
         setIsSaved(false);
         onSaveChange?.(saveCount - 1, false);
       } else {
-        await caseService.saveCase(caseId, currentUser.id);
+        await caseService.saveCase(caseId, currentUser.uid);
         setSaveCount((prev: number) => prev + 1);
         setIsSaved(true);
         onSaveChange?.(saveCount + 1, true);

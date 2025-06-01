@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
+import { Case } from '../../types/case';
+import { Button } from '../ui/Button';
+import { Heart, Bookmark } from 'lucide-react';
+import { ImageViewer } from './ImageViewer';
+import { CommentSection } from './CommentSection';
 
 interface CaseImage {
   url: string;

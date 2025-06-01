@@ -29,12 +29,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({ caseId, user }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim() || !user?.id) return;
+    if (!comment.trim() || !user?.uid) return;
 
     try {
       const newComment: Omit<Comment, 'id'> = {
         content: comment,
-        authorId: user.id,
+        authorId: user.uid,
         caseId: caseId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -51,7 +51,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ caseId, user }) => {
   };
 
   const handleDelete = async (commentId: string) => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     try {
       await commentService.deleteComment(commentId);
       loadComments();
@@ -71,7 +71,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ caseId, user }) => {
                 {comment.createdAt.toLocaleDateString()}
               </span>
             </div>
-            {user?.id === comment.authorId && (
+            {user?.uid === comment.authorId && (
               <button
                 onClick={() => handleDelete(comment.id)}
                 className="text-red-500 hover:text-red-700"

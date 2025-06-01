@@ -8,7 +8,7 @@ import {
   updateDoc,
   DocumentData,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../lib/firebase';
 import {
   Box,
   Typography,

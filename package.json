@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "if not exist dist mkdir dist && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "jest",
@@ -47,6 +47,8 @@
     "@testing-library/react": "^14.1.2",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.11",
+    "@types/lodash": "^4.17.17",
+    "@types/minimatch": "^5.1.2",
     "@types/node": "^20.17.57",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",

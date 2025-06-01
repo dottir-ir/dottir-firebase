@@ -1,3 +1,4 @@
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -8,140 +9,165 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useDropzone } from 'react-dropzone';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../../lib/firebase';
+import type { CaseFormData } from '../../../types/case';
+import type { StepProps } from '../../../types/form';
 
-export default function ImageUploadStep() {
-  const { setValue, watch } = useFormContext<CaseUpload>();
+interface ImageObject {
+  url: string;
+  description: string;
+  order: number;
+}
+
+export const ImageUploadStep: React.FC<StepProps> = ({
+  formData,
+  updateFormData,
+  nextStep,
+  prevStep,
+  isSubmitting
+}) => {
   const [uploading, setUploading] = useState(false);
-  const images = watch('images') || [];
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
     try {
-      const uploadPromises = acceptedFiles.map(async (file) => {
-        const imageId = uuidv4();
-        const storageRef = ref(storage, `case-images/${imageId}`);
-        
-        // Upload file to Firebase Storage
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
+      const newImages = await Promise.all(
+        acceptedFiles.map(async (file) => {
+          const imageId = `${Date.now()}-${file.name}`;
+          const storageRef = ref(storage, `case-images/${imageId}`);
+          await uploadBytes(storageRef, file);
+          const downloadURL = await getDownloadURL(storageRef);
+          return {
+            url: downloadURL,
+            description: '',
+            order: formData.images.length
+          } as ImageObject;
+        })
+      );
 
-        const newImage: ImageUpload = {
-          id: imageId,
-          url: downloadURL,
-          fileName: file.name,
-          fileType: file.type,
-          size: file.size,
-          uploadDate: new Date(),
-        };
-
-        return newImage;
+      updateFormData({
+        images: [...formData.images, ...newImages]
       });
-
-      const uploadedImages = await Promise.all(uploadPromises);
-      setValue('images', [...images, ...uploadedImages]);
     } catch (error) {
       console.error('Error uploading images:', error);
-      // TODO: Add error handling UI
     } finally {
       setUploading(false);
     }
-  }, [images, setValue]);
+  }, [formData.images, updateFormData]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.dicom']
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    multiple: true
   });
 
-  const removeImage = (imageId: string) => {
-    setValue('images', images.filter(img => img.id !== imageId));
+  const handleRemoveImage = (imageId: string) => {
+    updateFormData({
+      images: formData.images.filter(img => img.url !== imageId)
+    });
+  };
+
+  const handleImageDescriptionChange = (imageId: string, description: string) => {
+    updateFormData({
+      images: formData.images.map(img =>
+        img.url === imageId ? { ...img, description } : img
+      )
+    });
   };
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Image Upload
+        Upload Images
       </Typography>
-
-      <Paper
+      <Box
         {...getRootProps()}
         sx={{
-          p: 3,
-          mb: 3,
           border: '2px dashed',
           borderColor: isDragActive ? 'primary.main' : 'grey.300',
-          bgcolor: isDragActive ? 'action.hover' : 'background.paper',
-          cursor: 'pointer',
+          borderRadius: 1,
+          p: 3,
           textAlign: 'center',
+          cursor: 'pointer',
+          mb: 3
         }}
       >
         <input {...getInputProps()} />
-        {uploading ? (
-          <CircularProgress />
-        ) : (
-          <>
-            <AddIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-            <Typography>
-              {isDragActive
-                ? 'Drop the images here'
-                : 'Drag and drop images here, or click to select files'}
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              Supported formats: JPEG, PNG, GIF, DICOM (max 10MB)
-            </Typography>
-          </>
-        )}
-      </Paper>
+        <AddIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+        <Typography>
+          {isDragActive
+            ? 'Drop the images here'
+            : 'Drag and drop images here, or click to select files'}
+        </Typography>
+      </Box>
 
-      {images.length > 0 && (
-        <Grid container spacing={2}>
-          {images.map((image) => (
-            <Grid item xs={12} sm={6} md={4} key={image.id}>
-              <Paper
-                sx={{
-                  p: 1,
-                  position: 'relative',
-                  '&:hover .delete-button': {
-                    opacity: 1,
-                  },
-                }}
-              >
-                <img
-                  src={image.url}
-                  alt={image.fileName}
-                  style={{
-                    width: '100%',
-                    height: 200,
-                    objectFit: 'cover',
-                  }}
-                />
-                <IconButton
-                  className="delete-button"
-                  onClick={() => removeImage(image.id)}
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    bgcolor: 'rgba(255, 255, 255, 0.8)',
-                    opacity: 0,
-                    transition: 'opacity 0.2s',
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.9)',
-                    },
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-                <Typography variant="caption" noWrap>
-                  {image.fileName}
+      {formData.images.length > 0 && (
+        <Box>
+          <Typography variant="subtitle1" gutterBottom>
+            Uploaded Images
+          </Typography>
+          {formData.images.map((image, index) => (
+            <Box
+              key={index}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                mb: 2,
+                p: 2,
+                border: '1px solid',
+                borderColor: 'grey.300',
+                borderRadius: 1
+              }}
+            >
+              <img
+                src={image.url}
+                alt={`Uploaded image ${index + 1}`}
+                style={{ width: 100, height: 100, objectFit: 'cover', marginRight: 16 }}
+              />
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Image {index + 1}
                 </Typography>
-              </Paper>
-            </Grid>
+                <input
+                  type="text"
+                  value={image.description}
+                  onChange={(e) => handleImageDescriptionChange(image.url, e.target.value)}
+                  placeholder="Add a description"
+                  style={{ width: '100%', marginTop: 8 }}
+                />
+              </Box>
+              <IconButton
+                onClick={() => handleRemoveImage(image.url)}
+                disabled={isSubmitting}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <Button
+          variant="outlined"
+          onClick={prevStep}
+          disabled={isSubmitting}
+        >
+          Back
+        </Button>
+        <Button
+          variant="contained"
+          onClick={nextStep}
+          disabled={isSubmitting}
+        >
+          Next
+        </Button>
+      </Box>
     </Box>
   );
-} 
+}; 

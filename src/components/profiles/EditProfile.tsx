@@ -58,8 +58,8 @@ export const EditProfile: React.FC<EditProfileProps> = ({ user, onProfileUpdated
     setError(null);
 
     try {
-      await userService.updateUserProfile(user.id, formData);
-      const updatedUser = await userService.getUserById(user.id);
+      await userService.updateUserProfile(user.uid, formData);
+      const updatedUser = await userService.getUserById(user.uid);
       onProfileUpdated(updatedUser as User);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile');

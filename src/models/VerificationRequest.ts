@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import type { User } from '../types/user';
 
 export interface VerificationRequest {
   id: string;
@@ -12,12 +13,5 @@ export interface VerificationRequest {
 }
 
 export interface VerificationRequestWithUser extends VerificationRequest {
-  user: {
-    id: string;
-    displayName: string;
-    email: string;
-    title: string;
-    specialization?: string;
-    institution?: string;
-  };
+  user: User;
 } 

@@ -1,3 +1,8 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { VerificationService } from '../../services/VerificationService';
+import type { UserRole } from '../../types/user';
 import {
   TextField,
   Select,
@@ -26,8 +31,9 @@ export function RegisterForm() {
   const [verificationDocuments, setVerificationDocuments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { register, error: authError, clearError } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
+  const verificationService = new VerificationService();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,25 +45,28 @@ export function RegisterForm() {
 
     try {
       setLoading(true);
-      clearError();
+      setError(null);
       const normalizedYearOfStudy = yearOfStudy === '' ? undefined : Number(yearOfStudy);
-      const userCredential = await register(
-        email,
-        password,
+      
+      await register(email, password, {
+        displayName,
         role,
-        {
-          displayName,
-          title,
-          medicalSchool: role === 'student' ? medicalSchool : undefined,
-          yearOfStudy: role === 'student' ? normalizedYearOfStudy : undefined,
-          areasOfInterest: role === 'student' ? areasOfInterest : undefined,
-          verificationDocuments: verificationDocuments.map(file => file.name),
-        }
-      );
+        title,
+        medicalSchool: role === 'student' ? medicalSchool : undefined,
+        yearOfStudy: role === 'student' ? normalizedYearOfStudy : undefined,
+        areasOfInterest: role === 'student' ? areasOfInterest : undefined,
+        verificationDocuments: verificationDocuments.map(file => file.name),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: new Date()
+      });
 
       // If user is a doctor and has uploaded documents, create a verification request
       if (role === 'doctor' && verificationDocuments.length > 0) {
-        await verificationService.submitVerificationRequest(userCredential.user.uid, verificationDocuments.map(file => file.name));
+        await verificationService.createVerificationRequest(
+          email,
+          verificationDocuments.map(file => file.name)
+        );
       }
 
       navigate('/dashboard');
@@ -214,13 +223,6 @@ export function RegisterForm() {
 
         {role === 'doctor' && (
           <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Upload Verification Documents
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Please upload your medical license, board certification, or other relevant credentials.
-              Your account will be reviewed by our team before you can access all features.
-            </Typography>
             <input
               type="file"
               multiple
@@ -234,15 +236,14 @@ export function RegisterForm() {
                 variant="outlined"
                 component="span"
                 fullWidth
-                sx={{ mt: 1 }}
               >
-                Choose Files
+                Upload Verification Documents
               </Button>
             </label>
             {verificationDocuments.length > 0 && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Selected Files:
+                  Selected files:
                 </Typography>
                 {verificationDocuments.map((file, index) => (
                   <Chip
@@ -251,7 +252,7 @@ export function RegisterForm() {
                     onDelete={() => {
                       setVerificationDocuments(docs => docs.filter((_, i) => i !== index));
                     }}
-                    sx={{ mr: 1, mb: 1 }}
+                    sx={{ m: 0.5 }}
                   />
                 ))}
               </Box>
@@ -263,9 +264,9 @@ export function RegisterForm() {
           <Button
             type="submit"
             variant="contained"
+            color="primary"
             fullWidth
             disabled={loading}
-            sx={{ mt: 2 }}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </Button>

@@ -6,7 +6,7 @@ import {
   where,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../lib/firebase';
 import {
   Box,
   Card,
@@ -257,4 +257,6 @@ export function AnalyticsDashboard() {
       </Grid>
     </Box>
   );
-} 
+}
+
+export default AnalyticsDashboard; 

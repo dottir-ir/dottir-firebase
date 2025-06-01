@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, Timestamp, DocumentData, } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { BaseService, ServiceError } from './BaseService';
+import { BaseService } from './BaseService';
+import { ServiceError } from '@/utils/errors';
 import { VerificationRequest, VerificationRequestWithUser } from '../models/VerificationRequest';
 import { userService } from './UserService';
 import { notificationService } from './NotificationService';

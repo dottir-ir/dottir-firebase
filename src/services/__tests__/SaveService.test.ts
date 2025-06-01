@@ -13,11 +13,11 @@ import {
 import type { DocumentData } from 'firebase/firestore';
 import type { Save } from '../../models/Interaction';
 import { SaveService } from '../SaveService';
-import { db } from '../../config/firebase';
+import { db } from '../../lib/firebase';
 
 // Mock Firebase
 jest.mock('firebase/firestore');
-jest.mock('../../config/firebase');
+jest.mock('../../lib/firebase');
 
 describe('SaveService', () => {
   let saveService: SaveService;

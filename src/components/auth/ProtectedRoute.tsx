@@ -1,4 +1,6 @@
-import type { UserRole } from '../../services/AuthService';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import type { UserRole } from '../../types/user';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

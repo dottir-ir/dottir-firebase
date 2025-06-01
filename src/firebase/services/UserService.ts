@@ -3,9 +3,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-  User as FirebaseUser,
+  type User as FirebaseUser,
 } from 'firebase/auth';
-import type { UserProfile, UserRole } from '../config';
+import type { UserProfile, UserRole, User } from '../../types/user';
 import { auth, db } from '../config';
 import {
   doc,
@@ -17,9 +17,8 @@ import {
   query,
   where,
   deleteDoc,
-  DocumentData,
+  type DocumentData,
 } from 'firebase/firestore';
-import { User } from '../../types/user';
 
 export class UserService {
   static async register(email: string, password: string, displayName: string): Promise<FirebaseUser> {
@@ -34,10 +33,11 @@ export class UserService {
       uid: user.uid,
       email: user.email!,
       displayName,
-      role: 'user',
-      isVerified: false,
+      role: 'patient',
       createdAt: new Date(),
       updatedAt: new Date(),
+      lastLoginAt: new Date(),
+      doctorVerificationStatus: 'pending'
     };
 
     await setDoc(doc(db, 'users', user.uid), userProfile);
@@ -56,7 +56,34 @@ export class UserService {
 
   static async getUserProfile(uid: string): Promise<UserProfile | null> {
     const userDoc = await getDoc(doc(db, 'users', uid));
-    return userDoc.exists() ? (userDoc.data() as UserProfile) : null;
+    if (!userDoc.exists()) return null;
+    
+    const data = userDoc.data();
+    return {
+      uid: userDoc.id,
+      email: data.email,
+      displayName: data.displayName,
+      role: data.role,
+      photoURL: data.photoURL,
+      title: data.title,
+      specialization: data.specialization,
+      institution: data.institution,
+      bio: data.bio,
+      experience: data.experience,
+      areasOfInterest: data.areasOfInterest,
+      verificationDocuments: data.verificationDocuments,
+      medicalSchool: data.medicalSchool,
+      yearOfStudy: data.yearOfStudy,
+      doctorVerificationStatus: data.doctorVerificationStatus,
+      rejectionReason: data.rejectionReason,
+      lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+      phoneNumber: data.phoneNumber,
+      location: data.location,
+      website: data.website,
+      socialLinks: data.socialLinks
+    };
   }
 
   static async updateUserRole(uid: string, role: UserRole): Promise<void> {
@@ -68,24 +95,25 @@ export class UserService {
 
   static async verifyDoctor(uid: string): Promise<void> {
     await updateDoc(doc(db, 'users', uid), {
-      isVerified: true,
+      doctorVerificationStatus: 'verified',
       role: 'doctor',
       updatedAt: new Date(),
     });
   }
 
-  async createUser(userId: string, userData: Partial<User>): Promise<void> {
-    const userRef = doc(db, 'users', userId);
+  async createUser(uid: string, userData: Partial<User>): Promise<void> {
+    const userRef = doc(db, 'users', uid);
     await setDoc(userRef, {
       ...userData,
+      uid,
       createdAt: new Date(),
       updatedAt: new Date(),
       lastLoginAt: new Date()
     });
   }
 
-  async getUserById(userId: string): Promise<User | null> {
-    const userRef = doc(db, 'users', userId);
+  async getUserById(uid: string): Promise<User | null> {
+    const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
     
     if (!userSnap.exists()) {
@@ -95,15 +123,15 @@ export class UserService {
     const data = userSnap.data() as DocumentData;
     return {
       ...data,
-      id: userSnap.id,
+      uid: userSnap.id,
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
       lastLoginAt: data.lastLoginAt?.toDate() || new Date()
     } as User;
   }
 
-  async updateUserProfile(userId: string, userData: Partial<User>): Promise<void> {
-    const userRef = doc(db, 'users', userId);
+  async updateUserProfile(uid: string, userData: Partial<User>): Promise<void> {
+    const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, {
       ...userData,
       updatedAt: new Date()
@@ -121,7 +149,7 @@ export class UserService {
     const usersSnapshot = await getDocs(collection(db, 'users'));
     return usersSnapshot.docs.map((doc) => ({
       ...doc.data(),
-      id: doc.id,
+      uid: doc.id,
     })) as User[];
   }
 
@@ -134,7 +162,7 @@ export class UserService {
       const data = doc.data() as DocumentData;
       return {
         ...data,
-        id: doc.id,
+        uid: doc.id,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
         lastLoginAt: data.lastLoginAt?.toDate() || new Date()
@@ -150,8 +178,8 @@ export class UserService {
     return this.getUsersByRole('patient');
   }
 
-  async deleteUser(userId: string): Promise<void> {
-    const userRef = doc(db, 'users', userId);
+  async deleteUser(uid: string): Promise<void> {
+    const userRef = doc(db, 'users', uid);
     await deleteDoc(userRef);
   }
 
@@ -168,7 +196,7 @@ export class UserService {
       const data = doc.data() as DocumentData;
       return {
         ...data,
-        id: doc.id,
+        uid: doc.id,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
         lastLoginAt: data.lastLoginAt?.toDate() || new Date()

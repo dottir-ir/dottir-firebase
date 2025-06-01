@@ -26,19 +26,19 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 
   useEffect(() => {
     const checkLikeStatus = async () => {
-      if (!currentUser?.id) return;
+      if (!currentUser?.uid) return;
       try {
-        const liked = await caseService.isLiked(caseId, currentUser.id);
+        const liked = await caseService.isLiked(caseId, currentUser.uid);
         setIsLiked(liked);
       } catch (error) {
         console.error('Error checking like status:', error);
       }
     };
     checkLikeStatus();
-  }, [caseId, currentUser?.id]);
+  }, [caseId, currentUser?.uid]);
 
   const handleLike = async () => {
-    if (!currentUser?.id) {
+    if (!currentUser?.uid) {
       toast.error('Please sign in to like cases');
       return;
     }
@@ -46,12 +46,12 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
     setIsLoading(true);
     try {
       if (isLiked) {
-        await caseService.unlikeCase(caseId, currentUser.id);
+        await caseService.unlikeCase(caseId, currentUser.uid);
         setLikeCount((prev: number) => prev - 1);
         setIsLiked(false);
         onLikeChange?.(likeCount - 1, false);
       } else {
-        await caseService.likeCase(caseId, currentUser.id);
+        await caseService.likeCase(caseId, currentUser.uid);
         setLikeCount((prev: number) => prev + 1);
         setIsLiked(true);
         onLikeChange?.(likeCount + 1, true);

@@ -1,14 +1,6 @@
-import React, { useState } from 'react';
-import { Add as AddIcon } from '@mui/icons-material';
-import {
-  Box,
-  Typography,
-  TextField,
-  Grid,
-  Chip,
-  Stack,
-  IconButton,
-} from '@mui/material';
+import React from 'react';
+import { Box, Typography, TextField, Grid, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction } from '@mui/material';
+import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import type { CaseFormData } from '../../../types/case';
 import type { StepProps } from '../../../types/form';
 
@@ -17,78 +9,99 @@ export const TeachingPointsStep: React.FC<StepProps> = ({
   updateFormData,
   nextStep,
   prevStep,
-  errors
+  isSubmitting
 }) => {
-  const [newPoint, setNewPoint] = useState('');
+  const [newTitle, setNewTitle] = React.useState('');
+  const [newDescription, setNewDescription] = React.useState('');
 
-  const handleAddPoint = () => {
-    if (newPoint.trim()) {
-      const updatedPoints = [
-        ...(formData.teachingPoints || []),
-        { title: newPoint.trim(), description: '', order: formData.teachingPoints?.length || 0 }
-      ];
-      updateFormData({ teachingPoints: updatedPoints });
-      setNewPoint('');
+  const handleAddTeachingPoint = () => {
+    if (newTitle.trim() && newDescription.trim()) {
+      const newPoint = {
+        title: newTitle.trim(),
+        description: newDescription.trim(),
+        order: formData.teachingPoints.length
+      };
+      updateFormData({
+        teachingPoints: [...formData.teachingPoints, newPoint]
+      });
+      setNewTitle('');
+      setNewDescription('');
     }
   };
 
-  const handleRemovePoint = (index: number) => {
-    const updatedPoints = formData.teachingPoints?.filter((_, i) => i !== index) || [];
-    updateFormData({ teachingPoints: updatedPoints });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    nextStep();
+  const handleRemoveTeachingPoint = (index: number) => {
+    const updatedPoints = [...formData.teachingPoints];
+    updatedPoints.splice(index, 1);
+    // Update order of remaining points
+    const reorderedPoints = updatedPoints.map((point, idx) => ({
+      ...point,
+      order: idx
+    }));
+    updateFormData({ teachingPoints: reorderedPoints });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Box>
-        <Typography variant="h6" gutterBottom>
-          Teaching Points
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Typography gutterBottom>Teaching Points (one per line)</Typography>
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                fullWidth
-                label="Add Teaching Point"
-                value={newPoint}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPoint(e.target.value)}
-                onKeyPress={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddPoint();
-                  }
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <IconButton onClick={handleAddPoint} color="primary">
-                      <AddIcon />
-                    </IconButton>
-                  ),
-                }}
-              />
-            </Box>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {formData.teachingPoints?.map((point, index) => (
-                <Chip
-                  key={index}
-                  label={point.title}
-                  onDelete={() => handleRemovePoint(index)}
-                  sx={{ mb: 1 }}
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Teaching Points
+      </Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom>
+            Add Teaching Point
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              fullWidth
+              label="Title"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Description"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              multiline
+              rows={3}
+              sx={{ mb: 2 }}
+            />
+            <IconButton 
+              onClick={handleAddTeachingPoint} 
+              color="primary"
+              disabled={!newTitle.trim() || !newDescription.trim()}
+            >
+              <AddIcon />
+            </IconButton>
+          </Box>
+          <List>
+            {formData.teachingPoints.map((point, index) => (
+              <ListItem key={index}>
+                <ListItemText 
+                  primary={point.title}
+                  secondary={point.description}
                 />
-              ))}
-            </Stack>
-          </Grid>
+                <ListItemSecondaryAction>
+                  <IconButton edge="end" onClick={() => handleRemoveTeachingPoint(index)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
         </Grid>
+      </Grid>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <IconButton onClick={prevStep} disabled={isSubmitting}>
+          Back
+        </IconButton>
+        <IconButton onClick={nextStep} disabled={isSubmitting}>
+          Next
+        </IconButton>
       </Box>
-      <div className="button-group">
-        <button type="button" onClick={prevStep}>Back</button>
-        <button type="submit">Next</button>
-      </div>
-    </form>
+    </Box>
   );
-}; 
+};
+
+export default TeachingPointsStep; 

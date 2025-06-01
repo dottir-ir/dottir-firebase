@@ -37,7 +37,7 @@ export const VerificationRequestDetail = () => {
             return;
         setIsSubmitting(true);
         try {
-            await verificationService.approveVerificationRequest(id, currentUser.id);
+            await verificationService.approveVerificationRequest(id, currentUser.uid);
             navigate('/admin/verification');
         }
         catch (err) {
@@ -53,7 +53,7 @@ export const VerificationRequestDetail = () => {
             return;
         setIsSubmitting(true);
         try {
-            await verificationService.rejectVerificationRequest(id, currentUser.id, rejectionReason);
+            await verificationService.rejectVerificationRequest(id, currentUser.uid, rejectionReason);
             navigate('/admin/verification');
         }
         catch (err) {

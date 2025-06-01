@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface FooterLink {
@@ -19,12 +20,13 @@ export const Footer: React.FC<FooterProps> = ({
   sections = [],
   copyright = `© ${new Date().getFullYear()} MedCase. All rights reserved.`,
 }) => {
-  const { theme } = useTheme();
+  const { muiTheme } = useTheme();
+  const isDark = muiTheme.palette.mode === 'dark';
 
   return (
     <footer
       className={`
-        bg-${theme.colors.background}
+        ${isDark ? 'bg-gray-900' : 'bg-white'}
         border-t border-gray-200
         py-12
       `}
@@ -36,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({
               <h3
                 className={`
                   text-sm font-semibold
-                  text-${theme.colors.text}
+                  ${isDark ? 'text-white' : 'text-gray-900'}
                   uppercase tracking-wider
                 `}
               >
@@ -49,8 +51,7 @@ export const Footer: React.FC<FooterProps> = ({
                       href={link.href}
                       className={`
                         text-base
-                        text-${theme.colors.secondary}
-                        hover:text-${theme.colors.primary}
+                        ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}
                       `}
                     >
                       {link.label}
@@ -66,7 +67,7 @@ export const Footer: React.FC<FooterProps> = ({
             mt-8 pt-8
             border-t border-gray-200
             text-center text-sm
-            text-${theme.colors.secondary}
+            ${isDark ? 'text-gray-400' : 'text-gray-500'}
           `}
         >
           <p>{copyright}</p>
@@ -74,8 +75,7 @@ export const Footer: React.FC<FooterProps> = ({
             <a
               href="#"
               className={`
-                text-${theme.colors.secondary}
-                hover:text-${theme.colors.primary}
+                ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
               `}
             >
               <span className="sr-only">Facebook</span>
@@ -95,8 +95,7 @@ export const Footer: React.FC<FooterProps> = ({
             <a
               href="#"
               className={`
-                text-${theme.colors.secondary}
-                hover:text-${theme.colors.primary}
+                ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
               `}
             >
               <span className="sr-only">Twitter</span>
@@ -112,8 +111,7 @@ export const Footer: React.FC<FooterProps> = ({
             <a
               href="#"
               className={`
-                text-${theme.colors.secondary}
-                hover:text-${theme.colors.primary}
+                ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
               `}
             >
               <span className="sr-only">LinkedIn</span>

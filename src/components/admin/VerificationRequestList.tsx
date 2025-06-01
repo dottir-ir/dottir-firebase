@@ -1,9 +1,14 @@
 import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { VerificationService } from '../../services/VerificationService';
+import type { VerificationRequestWithUser } from '../../types/verification';
 
 export const VerificationRequestList: React.FC = () => {
   const [requests, setRequests] = useState<VerificationRequestWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const verificationService = new VerificationService();
 
   useEffect(() => {
     const loadRequests = async () => {
@@ -73,7 +78,7 @@ export const VerificationRequestList: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {format(request.submittedAt.toDate(), 'MMM d, yyyy')}
+                  {format(request.submittedAt instanceof Date ? request.submittedAt : new Date(request.submittedAt), 'MMM d, yyyy')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <Link
