@@ -2,7 +2,9 @@ import '@testing-library/jest-dom';
 
 // Mock Firebase
 jest.mock('firebase/app', () => ({
-  initializeApp: jest.fn(),
+  initializeApp: jest.fn().mockReturnValue({}),
+  getApp: jest.fn().mockReturnValue({}),
+  getApps: jest.fn().mockReturnValue([{}]),
 }));
 
 jest.mock('firebase/auth', () => ({

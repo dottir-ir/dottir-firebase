@@ -1,5 +1,5 @@
-import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query, where, DocumentData, increment, updateDoc, } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query, where, increment, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { BaseService, ServiceError } from './BaseService';
 export class LikeService extends BaseService {
     constructor() {

@@ -1,7 +1,7 @@
 import { CommentService } from '../CommentService';
 import { UserService } from '../UserService';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../firebase/config';
 import { Comment, CommentWithAuthor } from '../../models/Comment';
 // Mock Firebase and UserService
 jest.mock('firebase/firestore');

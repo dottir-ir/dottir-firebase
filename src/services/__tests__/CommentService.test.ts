@@ -10,12 +10,12 @@ import type { Comment, CommentWithUser } from '../../types/comment';
 import type { User } from '../../types/user';
 import { CommentService } from '../CommentService';
 import { UserService } from '../UserService';
-import { db } from '../../lib/firebase';
+import { db } from '../../firebase/config';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock Firebase and UserService
 vi.mock('firebase/firestore');
-vi.mock('../../lib/firebase');
+vi.mock('../../firebase/config');
 vi.mock('../UserService');
 
 describe('CommentService', () => {

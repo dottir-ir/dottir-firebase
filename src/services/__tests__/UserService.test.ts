@@ -1,4 +1,4 @@
-import { db } from '../../lib/firebase';
+import { db } from '../../firebase/config';
 
 // Mock Firebase
 jest.mock('firebase/firestore');

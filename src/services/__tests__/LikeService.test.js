@@ -1,6 +1,6 @@
 import { LikeService } from '../LikeService';
-import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query, where, DocumentData, increment, updateDoc, } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query, where, increment, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import { Like } from '../../models/Interaction';
 // Mock Firebase
 jest.mock('firebase/firestore');

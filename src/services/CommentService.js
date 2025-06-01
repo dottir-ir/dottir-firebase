@@ -1,5 +1,5 @@
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, DocumentData, increment, } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, increment } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { BaseService, ServiceError } from './BaseService';
 import { Comment } from '../types/comment';
 import { userService } from './UserService';

@@ -1,5 +1,5 @@
 import type { User as UserType, UserRole } from '../types/user';
-import { db } from '../lib/firebase';
+import { db } from '../firebase-config';
 import {
   collection,
   doc,

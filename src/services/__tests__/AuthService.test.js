@@ -1,7 +1,7 @@
 import { authService } from '../AuthService';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, User as FirebaseUser } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../config/firebase';
+import { auth, db } from '../../firebase/config';
 // Mock Firebase
 jest.mock('firebase/auth');
 jest.mock('firebase/firestore');

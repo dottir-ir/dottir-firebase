@@ -1,5 +1,5 @@
 import type { Case as CaseType } from '../types/case';
-import { db } from '../lib/firebase';
+import { db } from '../firebase-config';
 import {
   collection,
   doc,

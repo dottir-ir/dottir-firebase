@@ -1,11 +1,11 @@
 import { VerificationService } from '../VerificationService';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../firebase/config';
 import { userService } from '../UserService';
 import { notificationService } from '../NotificationService';
 // Mock Firebase and services
 jest.mock('firebase/firestore');
-jest.mock('../../config/firebase');
+jest.mock('../../firebase/config');
 jest.mock('../UserService');
 jest.mock('../NotificationService');
 describe('VerificationService', () => {

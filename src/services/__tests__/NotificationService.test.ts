@@ -1,4 +1,4 @@
-import { db } from '../../lib/firebase';
+import { db } from '../../firebase/config';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { MockAuthProvider } from '@/test/mocks/AuthProvider';

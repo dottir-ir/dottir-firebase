@@ -14,6 +14,9 @@ import { ProfilePage } from './pages/ProfilePage';
 import { Dashboard } from './components/Dashboard';
 import { Unauthorized } from './components/Unauthorized';
 import { VerificationPending } from './components/VerificationPending';
+import { useEffect } from 'react';
+import { getApps } from 'firebase/app';
+import { checkFirebaseInstances } from './utils/firebaseDebug';
 
 function AppRoutes() {
   const { currentUser } = useAuth();
@@ -81,6 +84,12 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    // Check for multiple Firebase initializations
+    checkFirebaseInstances();
+    console.log('App mounted - Firebase apps count:', getApps().length);
+  }, []);
+
   return (
     <>
       <Toaster

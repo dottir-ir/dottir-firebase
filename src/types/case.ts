@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 export interface Case {
   id: string;
@@ -11,9 +11,9 @@ export interface Case {
   tags: string[];
   category: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  publishedAt?: Timestamp;
   viewCount: number;
   likeCount: number;
   commentCount: number;
@@ -40,6 +40,45 @@ export interface Case {
     description: string;
     order: number;
   }[];
+}
+
+// Type guard to check if an object is a valid Case
+export function isValidCase(data: any): data is Case {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof data.id === 'string' &&
+    typeof data.title === 'string' &&
+    typeof data.description === 'string' &&
+    typeof data.authorId === 'string' &&
+    typeof data.status === 'string' &&
+    ['draft', 'published', 'archived'].includes(data.status) &&
+    Array.isArray(data.tags) &&
+    typeof data.category === 'string' &&
+    typeof data.difficulty === 'string' &&
+    ['beginner', 'intermediate', 'advanced'].includes(data.difficulty) &&
+    data.createdAt instanceof Timestamp &&
+    data.updatedAt instanceof Timestamp &&
+    (data.publishedAt === undefined || data.publishedAt instanceof Timestamp) &&
+    typeof data.viewCount === 'number' &&
+    typeof data.likeCount === 'number' &&
+    typeof data.commentCount === 'number' &&
+    typeof data.saveCount === 'number' &&
+    Array.isArray(data.likes) &&
+    Array.isArray(data.saves) &&
+    typeof data.clinicalHistory === 'string' &&
+    typeof data.clinicalPresentation === 'string' &&
+    typeof data.imagingFindings === 'string' &&
+    Array.isArray(data.differentialDiagnosis) &&
+    typeof data.finalDiagnosis === 'string' &&
+    typeof data.patientDemographics === 'object' &&
+    data.patientDemographics !== null &&
+    typeof data.patientDemographics.age === 'number' &&
+    typeof data.patientDemographics.gender === 'string' &&
+    typeof data.patientDemographics.presentingComplaint === 'string' &&
+    Array.isArray(data.images) &&
+    Array.isArray(data.teachingPoints)
+  );
 }
 
 export interface CaseMetadata {
@@ -149,6 +188,7 @@ export interface CaseTags {
 }
 
 export interface CaseFormData {
+  authorId: string;
   patientDemographics: {
     age: number;
     gender: 'male' | 'female' | 'other';

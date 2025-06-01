@@ -5,7 +5,7 @@ import { Box, Typography, Paper, Grid, IconButton, Button, CircularProgress, } f
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import { CaseUpload, ImageUpload } from '../../../types/case';
-import { storage } from '../../../firebase/config';
+import { storage } from '../../../firebase-config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 export default function ImageUploadStep() {

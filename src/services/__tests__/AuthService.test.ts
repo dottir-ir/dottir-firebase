@@ -5,7 +5,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { auth, db } from '../../lib/firebase';
+import { auth, db } from '../../firebase/config';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { AuthService } from '../AuthService';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';

@@ -1,6 +1,6 @@
 import { NotificationService, Notification } from '../NotificationService';
 import { collection, addDoc, getDocs, updateDoc, doc, query, where, Timestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db } from '../../firebase/config';
 // Mock Firebase
 jest.mock('firebase/firestore');
 jest.mock('../../config/firebase');

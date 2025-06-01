@@ -1,9 +1,7 @@
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit, DocumentData, Timestamp, startAfter, onSnapshot, increment, arrayUnion, arrayRemove, writeBatch, Query, } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit, Timestamp, startAfter, onSnapshot, increment, arrayUnion, arrayRemove, writeBatch, Query, } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { BaseService } from './BaseService';
 import { ServiceError } from '@/utils/errors';
-import { Case, CaseMetadata, CaseUpload } from '../types/case';
-import { Comment } from '../types/comment';
 export class CaseService extends BaseService {
     constructor() {
         super(...arguments);

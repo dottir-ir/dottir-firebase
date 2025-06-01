@@ -1,5 +1,5 @@
 import { collection, addDoc, getDocs, updateDoc, doc, query, where, Timestamp } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db } from '../firebase/config';
 export class NotificationService {
     constructor() {
         Object.defineProperty(this, "notificationsCollection", {
