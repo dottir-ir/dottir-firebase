@@ -193,3 +193,6 @@ export class VerificationService extends BaseService {
     }
   }
 }
+
+// Export an instance of the service
+export const verificationService = new VerificationService();
